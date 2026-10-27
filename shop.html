@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R&R Gardening — Your Neighborhood Nursery</title>
+    <!-- All assets are bundled locally in /vendor so the mock works fully offline -->
+    <script src="vendor/tailwind.js"></script>
+    <link rel="stylesheet" href="vendor/fonts.css">
+    <link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
+    <script src="js/store.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { DEFAULT: '#2D5A27', light: '#4A7C59', dark: '#1A3A18' },
+                        accent: { DEFAULT: '#E8A838', light: '#F0C060', dark: '#C08820' },
+                        surface: '#FFFFFF',
+                        bg: '#F5F3EF',
+                        txt: { DEFAULT: '#1F2937', muted: '#6B7280' },
+                        success: '#059669',
+                        warning: '#D97706',
+                        danger: '#DC2626',
+                    },
+                    fontFamily: {
+                        heading: ['"Playfair Display"', 'serif'],
+                        body: ['"Inter"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #F5F3EF; color: #1F2937; }
+        .font-heading { font-family: 'Playfair Display', serif; }
+
+        /* Scrollbar for category pills */
+        .category-scroll::-webkit-scrollbar { height: 4px; }
+        .category-scroll::-webkit-scrollbar-track { background: transparent; }
+        .category-scroll::-webkit-scrollbar-thumb { background: #2D5A27; border-radius: 4px; }
+
+        /* Cart slide animation */
+        .cart-overlay { transition: opacity 0.3s ease; }
+        .cart-panel { transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); }
+        .cart-panel.closed { transform: translateX(100%); }
+        .cart-panel.open { transform: translateX(0); }
+
+        /* Toast animation */
+        .toast { animation: toastIn 0.35s ease, toastOut 0.35s ease 1.8s forwards; }
+        @keyframes toastIn { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+        @keyframes toastOut { from { opacity:1; transform: translateY(0); } to { opacity:0; transform: translateY(-20px); } }
+
+        /* Product card animation */
+        .product-card { transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.35s ease; }
+        .product-card:hover { transform: translateY(-6px); box-shadow: 0 12px 28px rgba(0,0,0,0.12); }
+        .product-card.hidden-card { opacity: 0; transform: scale(0.95); pointer-events: none; position: absolute; }
+        .product-card.visible-card { opacity: 1; transform: scale(1); position: relative; }
+
+        /* Checkout modal */
+        .checkout-overlay { transition: opacity 0.3s ease; }
+        .checkout-modal { transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease; }
+
+        /* Mobile menu */
+        .mobile-menu { transition: max-height 0.35s ease, opacity 0.25s ease; overflow: hidden; }
+        .mobile-menu.closed { max-height: 0; opacity: 0; }
+        .mobile-menu.open { max-height: 300px; opacity: 1; }
+
+        /* Sticky header shadow */
+        .header-scrolled { box-shadow: 0 2px 16px rgba(0,0,0,0.08); }
+
+        /* Star rating */
+        .star { color: #E8A838; }
+
+        /* Button press */
+        .btn-press:active { transform: scale(0.96); }
+
+        /* Smooth appearance for filtered items */
+        .grid-container { position: relative; }
+
+        /* Hero pattern overlay */
+        .hero-pattern {
+            background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.08) 0%, transparent 50%),
+                              radial-gradient(circle at 80% 20%, rgba(255,255,255,0.06) 0%, transparent 40%),
+                              radial-gradient(circle at 60% 80%, rgba(255,255,255,0.05) 0%, transparent 45%);
+        }
+
+        /* Emoji product image */
+        .emoji-img {
+            width: 80px; height: 80px; font-size: 48px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e8f5e9, #f1f0e8);
+        }
+
+        /* Input focus */
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2D5A27;
+            box-shadow: 0 0 0 3px rgba(45,90,39,0.15);
+        }
+
+        /* Checkout steps */
+        .step-indicator { transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="min-h-screen bg-bg">
+
+<!-- ==================== HEADER ==================== -->
+<header id="mainHeader" class="sticky top-0 z-50 bg-surface border-b border-gray-100 transition-shadow duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16 md:h-18">
+            <!-- Logo -->
+            <a href="#" class="flex items-center gap-2 group">
+                <span class="text-2xl" data-rr-logo="2.25rem">🌿</span>
+                <span class="font-heading text-xl md:text-2xl font-bold text-primary">R&R Gardening</span>
+            </a>
+
+            <!-- Desktop Nav -->
+            <nav class="hidden md:flex items-center gap-8">
+                <a href="#hero" class="text-txt hover:text-primary font-medium transition-colors">Home</a>
+                <a href="#shop" class="text-txt hover:text-primary font-medium transition-colors">Shop</a>
+                <a href="#about" class="text-txt hover:text-primary font-medium transition-colors">About</a>
+                <a href="#contact" class="text-txt hover:text-primary font-medium transition-colors">Contact</a>
+                <a href="index.html" target="rr-admin" class="text-xs text-txt-muted hover:text-primary transition-colors border border-gray-200 rounded px-2 py-1">Admin Dashboard</a>
+            </nav>
+
+            <!-- Right side: Search + Cart + Mobile menu -->
+            <div class="flex items-center gap-3">
+                <!-- Search (desktop) -->
+                <div class="hidden md:flex items-center relative">
+                    <input id="searchInput" type="text" placeholder="Search plants..."
+                           class="w-48 lg:w-56 pl-9 pr-3 py-2 rounded-full border border-gray-200 bg-bg text-sm focus:w-64 transition-all duration-300"
+                           oninput="handleSearch(this.value)">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 text-txt-muted text-sm"></i>
+                </div>
+
+                <!-- Cart button -->
+                <button id="cartBtn" onclick="openCart()" class="relative p-2 text-txt hover:text-primary transition-colors btn-press" aria-label="Shopping Cart">
+                    <i class="fa-solid fa-cart-shopping text-xl"></i>
+                    <span id="cartBadge" class="absolute -top-1 -right-1 bg-accent text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+                </button>
+
+                <!-- Mobile hamburger -->
+                <button id="mobileMenuBtn" onclick="toggleMobileMenu()" class="md:hidden p-2 text-txt hover:text-primary transition-colors" aria-label="Menu">
+                    <i class="fa-solid fa-bars text-xl" id="menuIcon"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile menu -->
+        <div id="mobileMenu" class="mobile-menu closed md:hidden border-t border-gray-100">
+            <div class="py-4 space-y-1">
+                <!-- Mobile search -->
+                <div class="px-2 pb-3">
+                    <div class="relative">
+                        <input id="searchInputMobile" type="text" placeholder="Search plants..."
+                               class="w-full pl-9 pr-3 py-2 rounded-full border border-gray-200 bg-bg text-sm"
+                               oninput="handleSearch(this.value)">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-txt-muted text-sm"></i>
+                    </div>
+                </div>
+                <a href="#hero" onclick="closeMobileMenu()" class="block px-4 py-2 text-txt hover:bg-primary/5 hover:text-primary rounded-lg font-medium transition-colors">Home</a>
+                <a href="#shop" onclick="closeMobileMenu()" class="block px-4 py-2 text-txt hover:bg-primary/5 hover:text-primary rounded-lg font-medium transition-colors">Shop</a>
+                <a href="#about" onclick="closeMobileMenu()" class="block px-4 py-2 text-txt hover:bg-primary/5 hover:text-primary rounded-lg font-medium transition-colors">About</a>
+                <a href="#contact" onclick="closeMobileMenu()" class="block px-4 py-2 text-txt hover:bg-primary/5 hover:text-primary rounded-lg font-medium transition-colors">Contact</a>
+                <a href="index.html" class="block px-4 py-2 text-txt-muted hover:text-primary rounded-lg text-sm transition-colors">Admin Dashboard →</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ==================== HERO SECTION ==================== -->
+<section id="hero" class="relative overflow-hidden" style="background: linear-gradient(135deg, #1A3A18 0%, #2D5A27 40%, #4A7C59 100%);">
+    <div class="hero-pattern absolute inset-0"></div>
+    <!-- Floating emojis -->
+    <div class="absolute inset-0 pointer-events-none select-none overflow-hidden">
+        <span class="absolute text-4xl opacity-20 animate-pulse" style="top:10%;left:8%;">🌿</span>
+        <span class="absolute text-5xl opacity-15 animate-pulse" style="top:20%;right:12%;animation-delay:0.5s;">🌸</span>
+        <span class="absolute text-3xl opacity-20 animate-pulse" style="bottom:20%;left:15%;animation-delay:1s;">🪴</span>
+        <span class="absolute text-4xl opacity-15 animate-pulse" style="top:40%;right:25%;animation-delay:1.5s;">🌻</span>
+        <span class="absolute text-5xl opacity-10 animate-pulse" style="bottom:10%;right:8%;animation-delay:0.8s;">🌺</span>
+        <span class="absolute text-3xl opacity-20 animate-pulse" style="top:60%;left:5%;animation-delay:1.2s;">🌱</span>
+        <span class="absolute text-4xl opacity-15 animate-pulse" style="bottom:30%;left:45%;animation-delay:0.3s;">🌷</span>
+    </div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 text-center">
+        <div class="max-w-3xl mx-auto">
+            <div class="flex justify-center gap-3 mb-6 text-3xl md:text-4xl">
+                <span>🌿</span><span>🌸</span><span>🪴</span><span>🌻</span><span>🌺</span>
+            </div>
+            <h1 class="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+                Welcome to<br><span class="text-accent">R&R Gardening</span>
+            </h1>
+            <p class="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed">
+                Your neighborhood nursery — quality plants, expert advice, delivered to your door.
+            </p>
+            <a href="#shop" class="inline-flex items-center gap-2 bg-accent hover:bg-accent-dark text-white font-semibold px-8 py-4 rounded-full text-lg transition-all duration-300 shadow-lg hover:shadow-xl btn-press">
+                <span>Shop Now</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+    <!-- Wave divider -->
+    <div class="absolute bottom-0 left-0 right-0">
+        <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 40C240 80 480 0 720 40C960 80 1200 0 1440 40V80H0V40Z" fill="#F5F3EF"/>
+        </svg>
+    </div>
+</section>
+
+<!-- ==================== SHOP SECTION ==================== -->
+<section id="shop" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+    <!-- Section header -->
+    <div class="text-center mb-10">
+        <h2 class="font-heading text-3xl md:text-4xl font-bold text-primary mb-3">Our Collection</h2>
+        <p class="text-txt-muted text-lg max-w-xl mx-auto">Browse our hand-picked selection of quality plants, supplies, and tools.</p>
+    </div>
+
+    <!-- Category filters -->
+    <div class="mb-8">
+        <div class="category-scroll flex gap-2 overflow-x-auto pb-3 px-1" id="categoryFilters">
+            <!-- Rendered by JS -->
+        </div>
+    </div>
+
+    <!-- Results count -->
+    <div class="flex items-center justify-between mb-6">
+        <p id="resultsCount" class="text-sm text-txt-muted"></p>
+        <select id="sortSelect" onchange="sortProducts(this.value)"
+                class="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-surface text-txt cursor-pointer">
+            <option value="default">Sort: Featured</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="rating">Top Rated</option>
+            <option value="name">Name A–Z</option>
+        </select>
+    </div>
+
+    <!-- Product Grid -->
+    <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- Rendered by JS -->
+    </div>
+
+    <!-- Empty state -->
+    <div id="emptyState" class="hidden text-center py-16">
+        <span class="text-5xl block mb-4">🔍</span>
+        <h3 class="font-heading text-xl font-semibold text-txt mb-2">No products found</h3>
+        <p class="text-txt-muted">Try adjusting your search or filter criteria.</p>
+        <button onclick="resetFilters()" class="mt-4 text-primary hover:underline font-medium">Clear all filters</button>
+    </div>
+</section>
+
+<!-- ==================== ABOUT SECTION ==================== -->
+<section id="about" class="bg-surface border-t border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+                <h2 class="font-heading text-3xl md:text-4xl font-bold text-primary mb-6">About R&R Gardening</h2>
+                <p class="text-txt-muted leading-relaxed mb-4">
+                    Founded in 2018, R&R Gardening is Portland's favorite neighborhood nursery. We believe everyone deserves a little green in their life — whether you have a sprawling backyard or a sunny windowsill.
+                </p>
+                <p class="text-txt-muted leading-relaxed mb-6">
+                    Our team of passionate horticulturists hand-selects every plant that comes through our doors. We focus on healthy, locally-adapted varieties that thrive in the Pacific Northwest climate.
+                </p>
+                <div class="grid grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-primary">2,500+</div>
+                        <div class="text-sm text-txt-muted">Happy Customers</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-primary">300+</div>
+                        <div class="text-sm text-txt-muted">Plant Varieties</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-primary">8 yrs</div>
+                        <div class="text-sm text-txt-muted">In Business</div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-center">
+                <div class="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-12 text-center">
+                    <div class="text-7xl mb-4">🌿🏡🌸</div>
+                    <p class="font-heading text-2xl font-semibold text-primary italic">"Growing community,<br>one plant at a time."</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== NEWSLETTER ==================== -->
+<section class="bg-primary">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+        <div class="text-center max-w-2xl mx-auto">
+            <h2 class="font-heading text-2xl md:text-3xl font-bold text-white mb-3">Join Our Garden Club</h2>
+            <p class="text-white/70 mb-8">Get seasonal planting guides, exclusive deals, and expert tips delivered to your inbox.</p>
+            <div class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
+                <input type="email" placeholder="your@email.com" class="flex-1 px-5 py-3 rounded-full text-txt border-0 focus:ring-2 focus:ring-accent">
+                <button onclick="showToast('Thanks for subscribing! 🌱')" class="bg-accent hover:bg-accent-dark text-white font-semibold px-8 py-3 rounded-full transition-colors btn-press whitespace-nowrap">
+                    Subscribe
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== CONTACT SECTION ==================== -->
+<section id="contact" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
+    <div class="text-center mb-10">
+        <h2 class="font-heading text-3xl md:text-4xl font-bold text-primary mb-3">Visit Us</h2>
+        <p class="text-txt-muted text-lg">We'd love to see you! Stop by or reach out anytime.</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        <div class="bg-surface rounded-xl p-6 text-center border border-gray-100 shadow-sm">
+            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-location-dot text-primary text-xl"></i>
+            </div>
+            <h3 class="font-semibold text-txt mb-2">Address</h3>
+            <p class="text-txt-muted text-sm">1247 Greenhouse Lane<br>Portland, OR 97201</p>
+        </div>
+        <div class="bg-surface rounded-xl p-6 text-center border border-gray-100 shadow-sm">
+            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-clock text-primary text-xl"></i>
+            </div>
+            <h3 class="font-semibold text-txt mb-2">Hours</h3>
+            <p class="text-txt-muted text-sm">Mon–Sat: 8am – 6pm<br>Sunday: 9am – 4pm</p>
+        </div>
+        <div class="bg-surface rounded-xl p-6 text-center border border-gray-100 shadow-sm">
+            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-phone text-primary text-xl"></i>
+            </div>
+            <h3 class="font-semibold text-txt mb-2">Contact</h3>
+            <p class="text-txt-muted text-sm">(503) 555-0192<br>hello@rrgardening.com</p>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== FOOTER ==================== -->
+<footer class="bg-primary-dark text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+            <!-- Col 1: About -->
+            <div>
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-2xl">🌿</span>
+                    <span class="font-heading text-xl font-bold">R&R Gardening</span>
+                </div>
+                <p class="text-white/60 text-sm leading-relaxed mb-4">
+                    Portland's favorite neighborhood nursery. Quality plants, expert advice, and everything you need to grow your perfect garden.
+                </p>
+                <p class="text-white/50 text-sm">
+                    <i class="fa-solid fa-location-dot mr-2"></i>1247 Greenhouse Lane, Portland, OR 97201
+                </p>
+            </div>
+            <!-- Col 2: Quick Links -->
+            <div>
+                <h4 class="font-semibold text-lg mb-4">Quick Links</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#shop" class="text-white/60 hover:text-accent transition-colors">Shop</a></li>
+                    <li><a href="#about" class="text-white/60 hover:text-accent transition-colors">About</a></li>
+                    <li><a href="#contact" class="text-white/60 hover:text-accent transition-colors">Contact</a></li>
+                    <li><a href="#" class="text-white/60 hover:text-accent transition-colors">FAQ</a></li>
+                    <li><a href="#" class="text-white/60 hover:text-accent transition-colors">Shipping Policy</a></li>
+                </ul>
+            </div>
+            <!-- Col 3: Connect -->
+            <div>
+                <h4 class="font-semibold text-lg mb-4">Connect</h4>
+                <ul class="space-y-2 text-sm mb-6">
+                    <li class="text-white/60"><i class="fa-solid fa-envelope mr-2"></i>hello@rrgardening.com</li>
+                    <li class="text-white/60"><i class="fa-solid fa-phone mr-2"></i>(503) 555-0192</li>
+                </ul>
+                <div class="flex gap-4">
+                    <a href="#" class="w-10 h-10 bg-white/10 hover:bg-accent rounded-full flex items-center justify-center transition-colors">
+                        <i class="fa-brands fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 bg-white/10 hover:bg-accent rounded-full flex items-center justify-center transition-colors">
+                        <i class="fa-brands fa-instagram"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 bg-white/10 hover:bg-accent rounded-full flex items-center justify-center transition-colors">
+                        <i class="fa-brands fa-pinterest-p"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 bg-white/10 hover:bg-accent rounded-full flex items-center justify-center transition-colors">
+                        <i class="fa-brands fa-tiktok"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="border-t border-white/10 mt-10 pt-8 flex flex-col md:flex-row justify-between items-center gap-3 text-sm text-white/40">
+            <span>© 2026 R&R Gardening. All rights reserved.</span>
+            <span>Powered by R&R Inventory System</span>
+        </div>
+    </div>
+</footer>
+
+<!-- ==================== CART SLIDE-OUT ==================== -->
+<div id="cartOverlay" class="cart-overlay fixed inset-0 bg-black/50 z-[60] hidden" onclick="closeCart()"></div>
+<aside id="cartPanel" class="cart-panel closed fixed top-0 right-0 h-full w-full sm:w-[420px] bg-surface z-[70] flex flex-col shadow-2xl">
+    <!-- Cart Header -->
+    <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+        <h2 class="font-heading text-xl font-bold text-primary flex items-center gap-2">
+            <i class="fa-solid fa-cart-shopping text-lg"></i> Your Cart
+        </h2>
+        <button onclick="closeCart()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-txt-muted hover:text-txt transition-colors">
+            <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+    </div>
+    <!-- Cart Body -->
+    <div id="cartBody" class="flex-1 overflow-y-auto px-6 py-4">
+        <!-- Rendered by JS -->
+    </div>
+    <!-- Cart Footer -->
+    <div id="cartFooter" class="border-t border-gray-100 px-6 py-5 hidden">
+        <div class="space-y-2 mb-5">
+            <div class="flex justify-between text-sm text-txt-muted">
+                <span>Subtotal</span>
+                <span id="cartSubtotal">$0.00</span>
+            </div>
+            <div class="flex justify-between text-sm text-txt-muted">
+                <span>Estimated Tax (8.5%)</span>
+                <span id="cartTax">$0.00</span>
+            </div>
+            <div class="flex justify-between font-bold text-lg text-txt pt-2 border-t border-gray-100">
+                <span>Total</span>
+                <span id="cartTotal">$0.00</span>
+            </div>
+        </div>
+        <button onclick="openCheckout()" class="w-full bg-accent hover:bg-accent-dark text-white font-semibold py-3 rounded-full transition-colors btn-press mb-2">
+            Proceed to Checkout
+        </button>
+        <button onclick="closeCart()" class="w-full text-primary hover:underline text-sm py-2">
+            Continue Shopping
+        </button>
+    </div>
+</aside>
+
+<!-- ==================== CHECKOUT MODAL ==================== -->
+<div id="checkoutOverlay" class="checkout-overlay fixed inset-0 bg-black/50 z-[80] hidden flex items-center justify-center p-4" onclick="closeCheckoutOnOverlay(event)">
+    <div id="checkoutModal" class="checkout-modal bg-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <!-- Checkout Header -->
+        <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 sticky top-0 bg-surface rounded-t-2xl z-10">
+            <h2 class="font-heading text-xl font-bold text-primary">Checkout</h2>
+            <button onclick="closeCheckout()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-txt-muted hover:text-txt transition-colors">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Step Indicators -->
+        <div class="flex items-center justify-center gap-2 px-6 pt-5 pb-2">
+            <div id="stepInd1" class="step-indicator flex items-center gap-1">
+                <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">1</span>
+                <span class="text-sm font-medium text-primary hidden sm:inline">Contact</span>
+            </div>
+            <div class="w-8 h-px bg-gray-200"></div>
+            <div id="stepInd2" class="step-indicator flex items-center gap-1">
+                <span class="w-8 h-8 rounded-full bg-gray-200 text-txt-muted flex items-center justify-center text-sm font-bold">2</span>
+                <span class="text-sm font-medium text-txt-muted hidden sm:inline">Shipping</span>
+            </div>
+            <div class="w-8 h-px bg-gray-200"></div>
+            <div id="stepInd3" class="step-indicator flex items-center gap-1">
+                <span class="w-8 h-8 rounded-full bg-gray-200 text-txt-muted flex items-center justify-center text-sm font-bold">3</span>
+                <span class="text-sm font-medium text-txt-muted hidden sm:inline">Payment</span>
+            </div>
+        </div>
+
+        <!-- Checkout Body -->
+        <div class="px-6 py-5">
+            <!-- Step 1: Contact -->
+            <div id="checkoutStep1" class="space-y-4">
+                <h3 class="font-semibold text-txt text-lg mb-3">Contact Information</h3>
+                <div>
+                    <label class="block text-sm font-medium text-txt mb-1">Full Name</label>
+                    <input id="coName" type="text" placeholder="Jane Doe" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-txt mb-1">Email Address</label>
+                    <input id="coEmail" type="email" placeholder="jane@email.com" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-txt mb-1">Phone Number</label>
+                    <input id="coPhone" type="tel" placeholder="(555) 123-4567" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+                </div>
+                <button onclick="goToStep(2)" class="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 rounded-full transition-colors btn-press mt-2">
+                    Continue to Shipping <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+
+            <!-- Step 2: Shipping -->
+            <div id="checkoutStep2" class="space-y-4 hidden">
+                <h3 class="font-semibold text-txt text-lg mb-3">Shipping Details</h3>
+                <div class="flex items-center gap-2 p-3 bg-primary/5 rounded-lg mb-2">
+                    <input type="checkbox" id="pickupCheck" class="w-4 h-4 accent-primary" onchange="togglePickup()">
+                    <label for="pickupCheck" class="text-sm font-medium text-primary cursor-pointer">Pickup in store (Free)</label>
+                </div>
+                <div id="shippingFields" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-txt mb-1">Street Address</label>
+                        <input id="coStreet" type="text" placeholder="123 Garden St" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-txt mb-1">City</label>
+                            <input id="coCity" type="text" placeholder="Portland" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-txt mb-1">State</label>
+                            <select id="coState" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+                                <option>OR</option><option>WA</option><option>CA</option><option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="w-1/2">
+                        <label class="block text-sm font-medium text-txt mb-1">ZIP Code</label>
+                        <input id="coZip" type="text" placeholder="97201" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+                    </div>
+                </div>
+                <div class="flex gap-3 mt-2">
+                    <button onclick="goToStep(1)" class="flex-1 border border-gray-200 text-txt font-semibold py-3 rounded-full hover:bg-gray-50 transition-colors btn-press">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Back
+                    </button>
+                    <button onclick="goToStep(3)" class="flex-1 bg-primary hover:bg-primary-dark text-white font-semibold py-3 rounded-full transition-colors btn-press">
+                        Continue to Payment <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Payment -->
+            <div id="checkoutStep3" class="space-y-4 hidden">
+                <h3 class="font-semibold text-txt text-lg mb-3">Payment Information</h3>
+                <!-- Order summary -->
+                <div class="bg-bg rounded-xl p-4 mb-4">
+                    <h4 class="text-sm font-semibold text-txt mb-2">Order Summary</h4>
+                    <div id="checkoutSummaryItems" class="space-y-2 text-sm text-txt-muted mb-3"></div>
+                    <div class="border-t border-gray-200 pt-2 space-y-1">
+                        <div class="flex justify-between text-sm"><span>Subtotal</span><span id="checkoutSubtotal">$0.00</span></div>
+                        <div class="flex justify-between text-sm"><span>Tax (8.5%)</span><span id="checkoutTax">$0.00</span></div>
+                        <div class="flex justify-between font-bold text-primary pt-1"><span>Total</span><span id="checkoutTotal">$0.00</span></div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-txt mb-1">Card Number</label>
+                    <input type="text" placeholder="4242 4242 4242 4242" maxlength="19" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-txt mb-1">Expiration</label>
+                        <input type="text" placeholder="MM / YY" maxlength="7" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-txt mb-1">CVV</label>
+                        <input type="text" placeholder="123" maxlength="4" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+                    </div>
+                </div>
+                <div class="flex gap-3 mt-2">
+                    <button onclick="goToStep(2)" class="flex-1 border border-gray-200 text-txt font-semibold py-3 rounded-full hover:bg-gray-50 transition-colors btn-press">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Back
+                    </button>
+                    <button onclick="placeOrder()" class="flex-1 bg-accent hover:bg-accent-dark text-white font-semibold py-3 rounded-full transition-colors btn-press">
+                        <i class="fa-solid fa-lock mr-2"></i> Place Order
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Success -->
+            <div id="checkoutStep4" class="hidden text-center py-8">
+                <div class="text-6xl mb-4">🎉</div>
+                <h3 class="font-heading text-2xl font-bold text-primary mb-2">Order Placed!</h3>
+                <p class="text-txt-muted mb-1">Thank you for your purchase.</p>
+                <p class="text-sm text-txt-muted mb-1">Order number: <strong class="text-txt" id="orderNumber">#RRG-1048</strong></p>
+                <p class="text-sm text-txt-muted mb-8">A confirmation email has been sent to your inbox.</p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <button onclick="closeCheckout(); closeCart();" class="bg-primary hover:bg-primary-dark text-white font-semibold px-8 py-3 rounded-full transition-colors btn-press">
+                        Continue Shopping
+                    </button>
+                    <a href="index.html" target="rr-admin" class="border border-primary text-primary hover:bg-primary/5 font-semibold px-6 py-3 rounded-full transition-colors">
+                        <i class="fa-solid fa-gauge-high mr-1"></i> View in Admin Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== TOAST CONTAINER ==================== -->
+<div id="toastContainer" class="fixed bottom-6 right-6 z-[90] flex flex-col gap-2 items-end pointer-events-none"></div>
+
+<!-- ==================== JAVASCRIPT ==================== -->
+<script>
+// ========== PRODUCT DATA ==========
+// Products come from the shared store (js/store.js) so stock stays in sync with the Admin Dashboard.
+let products = RRStore.getProducts();
+let categories = ['All', ...RRStore.getCategories()];
+
+// Live sync: when the dashboard restocks / adds products, refresh the storefront
+RRStore.subscribe(() => {
+    products = RRStore.getProducts();
+    categories = ['All', ...RRStore.getCategories()];
+    // Drop cart lines that are no longer available and clamp quantities to stock
+    cart = cart.filter(c => { const p = products.find(x => x.id === c.id); if (!p || p.stock === 0) return false; c.qty = Math.min(c.qty, p.stock); return true; });
+    renderCategoryFilters();
+    renderProducts();
+    renderCart();
+    updateCartBadge();
+});
+
+// ========== STATE ==========
+let cart = [];
+let activeCategory = 'All';
+let searchQuery = '';
+let currentSort = 'default';
+let checkoutStep = 1;
+
+// ========== INITIALIZATION ==========
+document.addEventListener('DOMContentLoaded', () => {
+    renderCategoryFilters();
+    renderProducts();
+    renderCart();
+    initScrollHeader();
+});
+
+// ========== HEADER SCROLL SHADOW ==========
+function initScrollHeader() {
+    const header = document.getElementById('mainHeader');
+    window.addEventListener('scroll', () => {
+        header.classList.toggle('header-scrolled', window.scrollY > 10);
+    });
+}
+
+// ========== MOBILE MENU ==========
+function toggleMobileMenu() {
+    const menu = document.getElementById('mobileMenu');
+    const icon = document.getElementById('menuIcon');
+    const isOpen = menu.classList.contains('open');
+    menu.classList.toggle('open', !isOpen);
+    menu.classList.toggle('closed', isOpen);
+    icon.className = isOpen ? 'fa-solid fa-bars text-xl' : 'fa-solid fa-xmark text-xl';
+}
+function closeMobileMenu() {
+    const menu = document.getElementById('mobileMenu');
+    const icon = document.getElementById('menuIcon');
+    menu.classList.remove('open');
+    menu.classList.add('closed');
+    icon.className = 'fa-solid fa-bars text-xl';
+}
+
+// ========== CATEGORY FILTERS ==========
+function renderCategoryFilters() {
+    const container = document.getElementById('categoryFilters');
+    container.innerHTML = categories.map(cat => {
+        const isActive = cat === activeCategory;
+        return `<button onclick="setCategory('${cat}')"
+                    class="whitespace-nowrap px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 border
+                    ${isActive
+                        ? 'bg-primary text-white border-primary shadow-sm'
+                        : 'bg-surface text-txt-muted border-gray-200 hover:border-primary hover:text-primary'
+                    }">${cat}</button>`;
+    }).join('');
+}
+
+function setCategory(cat) {
+    activeCategory = cat;
+    renderCategoryFilters();
+    renderProducts();
+}
+
+// ========== SEARCH ==========
+function handleSearch(value) {
+    searchQuery = value.toLowerCase().trim();
+    // Sync both search inputs
+    document.getElementById('searchInput').value = value;
+    document.getElementById('searchInputMobile').value = value;
+    renderProducts();
+}
+
+function resetFilters() {
+    searchQuery = '';
+    activeCategory = 'All';
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchInputMobile').value = '';
+    document.getElementById('sortSelect').value = 'default';
+    currentSort = 'default';
+    renderCategoryFilters();
+    renderProducts();
+}
+
+// ========== SORT ==========
+function sortProducts(value) {
+    currentSort = value;
+    renderProducts();
+}
+
+// ========== RENDER PRODUCTS ==========
+function renderProducts() {
+    let filtered = products.filter(p => {
+        const matchCat = activeCategory === 'All' || p.category === activeCategory;
+        const matchSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery) || p.desc.toLowerCase().includes(searchQuery) || p.category.toLowerCase().includes(searchQuery);
+        return matchCat && matchSearch;
+    });
+
+    // Sort
+    switch(currentSort) {
+        case 'price-asc':  filtered.sort((a,b) => a.price - b.price); break;
+        case 'price-desc': filtered.sort((a,b) => b.price - a.price); break;
+        case 'rating':     filtered.sort((a,b) => b.rating - a.rating); break;
+        case 'name':       filtered.sort((a,b) => a.name.localeCompare(b.name)); break;
+    }
+
+    const grid = document.getElementById('productGrid');
+    const empty = document.getElementById('emptyState');
+    const count = document.getElementById('resultsCount');
+
+    if (filtered.length === 0) {
+        grid.classList.add('hidden');
+        empty.classList.remove('hidden');
+        count.textContent = '0 products';
+        return;
+    }
+
+    grid.classList.remove('hidden');
+    empty.classList.add('hidden');
+    count.textContent = `${filtered.length} product${filtered.length !== 1 ? 's' : ''}`;
+
+    grid.innerHTML = filtered.map(p => {
+        let stockHtml, btnHtml;
+        if (p.stock === 0) {
+            stockHtml = `<span class="text-xs font-medium text-danger"><i class="fa-solid fa-circle-xmark mr-1"></i>Out of Stock</span>`;
+            btnHtml = `<button disabled class="w-full py-2.5 rounded-full text-sm font-semibold bg-gray-100 text-gray-400 cursor-not-allowed">Out of Stock</button>`;
+        } else if (p.stock <= 10) {
+            stockHtml = `<span class="text-xs font-medium text-warning"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Low Stock — ${p.stock} left</span>`;
+            btnHtml = `<button onclick="addToCart(${p.id})" class="w-full py-2.5 rounded-full text-sm font-semibold bg-primary hover:bg-primary-dark text-white transition-colors btn-press"><i class="fa-solid fa-cart-plus mr-1"></i> Add to Cart</button>`;
+        } else {
+            stockHtml = `<span class="text-xs font-medium text-success"><i class="fa-solid fa-circle-check mr-1"></i>In Stock</span>`;
+            btnHtml = `<button onclick="addToCart(${p.id})" class="w-full py-2.5 rounded-full text-sm font-semibold bg-primary hover:bg-primary-dark text-white transition-colors btn-press"><i class="fa-solid fa-cart-plus mr-1"></i> Add to Cart</button>`;
+        }
+
+        const stars = renderStars(p.rating);
+
+        return `
+        <div class="product-card visible-card bg-surface rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+            <div class="flex items-center justify-center py-8 bg-gradient-to-br from-primary/5 to-accent/5">
+                <div class="emoji-img"><span>${p.emoji}</span></div>
+            </div>
+            <div class="p-5 flex flex-col flex-1">
+                <div class="flex items-start justify-between mb-1">
+                    <h3 class="font-semibold text-txt leading-snug">${p.name}</h3>
+                </div>
+                <span class="inline-block text-xs text-txt-muted bg-bg rounded-full px-2.5 py-0.5 mb-2 self-start">${p.category}</span>
+                <p class="text-sm text-txt-muted mb-3 line-clamp-1">${p.desc}</p>
+                <div class="flex items-center gap-2 mb-3">
+                    ${stars}
+                    <span class="text-xs text-txt-muted">${p.rating}</span>
+                </div>
+                <div class="mt-auto">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xl font-bold text-primary">\$${p.price.toFixed(2)}</span>
+                        ${stockHtml}
+                    </div>
+                    ${btnHtml}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderStars(rating) {
+    let html = '';
+    const full = Math.floor(rating);
+    const half = rating % 1 >= 0.3;
+    for (let i = 0; i < full; i++) html += '<i class="fa-solid fa-star star text-sm"></i>';
+    if (half) html += '<i class="fa-solid fa-star-half-stroke star text-sm"></i>';
+    const empty = 5 - full - (half ? 1 : 0);
+    for (let i = 0; i < empty; i++) html += '<i class="fa-regular fa-star star text-sm"></i>';
+    return html;
+}
+
+// ========== CART FUNCTIONS ==========
+function addToCart(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product || product.stock === 0) return;
+
+    const existing = cart.find(c => c.id === productId);
+    if (existing) {
+        if (existing.qty < product.stock) {
+            existing.qty++;
+        } else {
+            showToast(`Max stock reached for ${product.name}`, 'warning');
+            return;
+        }
+    } else {
+        cart.push({ id: productId, qty: 1 });
+    }
+
+    renderCart();
+    updateCartBadge();
+    showToast(`Added to cart! ✓ ${product.name}`);
+}
+
+function removeFromCart(productId) {
+    cart = cart.filter(c => c.id !== productId);
+    renderCart();
+    updateCartBadge();
+}
+
+function changeQty(productId, delta) {
+    const item = cart.find(c => c.id === productId);
+    const product = products.find(p => p.id === productId);
+    if (!item || !product) return;
+
+    item.qty += delta;
+    if (item.qty <= 0) {
+        removeFromCart(productId);
+        return;
+    }
+    if (item.qty > product.stock) {
+        item.qty = product.stock;
+        showToast(`Max stock reached`, 'warning');
+    }
+
+    renderCart();
+    updateCartBadge();
+}
+
+function updateCartBadge() {
+    const badge = document.getElementById('cartBadge');
+    const total = cart.reduce((sum, c) => sum + c.qty, 0);
+    badge.textContent = total;
+    badge.classList.toggle('hidden', total === 0);
+}
+
+function getCartTotals() {
+    const subtotal = cart.reduce((sum, c) => {
+        const p = products.find(pr => pr.id === c.id);
+        return sum + (p ? p.price * c.qty : 0);
+    }, 0);
+    const tax = subtotal * 0.085;
+    const total = subtotal + tax;
+    return { subtotal, tax, total };
+}
+
+function renderCart() {
+    const body = document.getElementById('cartBody');
+    const footer = document.getElementById('cartFooter');
+
+    if (cart.length === 0) {
+        body.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-full text-center py-12">
+                <span class="text-5xl mb-4">🛒</span>
+                <h3 class="font-heading text-lg font-semibold text-txt mb-2">Your cart is empty</h3>
+                <p class="text-sm text-txt-muted mb-4">Add some plants to get started!</p>
+                <button onclick="closeCart()" class="text-primary hover:underline font-medium text-sm">Browse Products</button>
+            </div>`;
+        footer.classList.add('hidden');
+        return;
+    }
+
+    footer.classList.remove('hidden');
+
+    body.innerHTML = cart.map(c => {
+        const p = products.find(pr => pr.id === c.id);
+        if (!p) return '';
+        const lineTotal = p.price * c.qty;
+        return `
+        <div class="flex gap-3 py-4 border-b border-gray-50 last:border-0">
+            <div class="emoji-img flex-shrink-0" style="width:52px;height:52px;font-size:28px;"><span>${p.emoji}</span></div>
+            <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-start">
+                    <h4 class="font-medium text-txt text-sm truncate pr-2">${p.name}</h4>
+                    <button onclick="removeFromCart(${p.id})" class="text-txt-muted hover:text-danger transition-colors flex-shrink-0" title="Remove">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
+                <p class="text-xs text-txt-muted">\$${p.price.toFixed(2)} each</p>
+                <div class="flex items-center justify-between mt-2">
+                    <div class="flex items-center gap-1 border border-gray-200 rounded-full">
+                        <button onclick="changeQty(${p.id},-1)" class="w-7 h-7 flex items-center justify-center text-txt-muted hover:text-primary rounded-full hover:bg-primary/5 transition-colors text-sm">−</button>
+                        <span class="w-7 text-center text-sm font-medium text-txt">${c.qty}</span>
+                        <button onclick="changeQty(${p.id},1)" class="w-7 h-7 flex items-center justify-center text-txt-muted hover:text-primary rounded-full hover:bg-primary/5 transition-colors text-sm">+</button>
+                    </div>
+                    <span class="font-semibold text-sm text-txt">\$${lineTotal.toFixed(2)}</span>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+
+    const { subtotal, tax, total } = getCartTotals();
+    document.getElementById('cartSubtotal').textContent = `\$${subtotal.toFixed(2)}`;
+    document.getElementById('cartTax').textContent = `\$${tax.toFixed(2)}`;
+    document.getElementById('cartTotal').textContent = `\$${total.toFixed(2)}`;
+}
+
+function resetCart() {
+    cart = [];
+    renderCart();
+    updateCartBadge();
+}
+
+// ========== CART PANEL ==========
+function openCart() {
+    const overlay = document.getElementById('cartOverlay');
+    const panel = document.getElementById('cartPanel');
+    overlay.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        overlay.style.opacity = '1';
+        panel.classList.remove('closed');
+        panel.classList.add('open');
+    });
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCart() {
+    const overlay = document.getElementById('cartOverlay');
+    const panel = document.getElementById('cartPanel');
+    panel.classList.remove('open');
+    panel.classList.add('closed');
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+        overlay.classList.add('hidden');
+    }, 350);
+    document.body.style.overflow = '';
+}
+
+// ========== CHECKOUT ==========
+function openCheckout() {
+    if (cart.length === 0) return;
+    checkoutStep = 1;
+    renderCheckoutSteps();
+    const overlay = document.getElementById('checkoutOverlay');
+    overlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCheckout() {
+    document.getElementById('checkoutOverlay').classList.add('hidden');
+    document.body.style.overflow = '';
+    // Reset to step 1
+    checkoutStep = 1;
+    renderCheckoutSteps();
+}
+
+function closeCheckoutOnOverlay(e) {
+    if (e.target === e.currentTarget) closeCheckout();
+}
+
+function goToStep(step) {
+    checkoutStep = step;
+    renderCheckoutSteps();
+}
+
+function renderCheckoutSteps() {
+    // Hide all steps
+    for (let i = 1; i <= 4; i++) {
+        document.getElementById(`checkoutStep${i}`).classList.toggle('hidden', i !== checkoutStep);
+    }
+
+    // Update indicators
+    for (let i = 1; i <= 3; i++) {
+        const ind = document.getElementById(`stepInd${i}`);
+        const circle = ind.querySelector('span:first-child');
+        const label = ind.querySelector('span:last-child');
+        if (i < checkoutStep || checkoutStep === 4) {
+            circle.className = 'w-8 h-8 rounded-full bg-success text-white flex items-center justify-center text-sm font-bold';
+            circle.innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
+            if (label) label.className = 'text-sm font-medium text-success hidden sm:inline';
+        } else if (i === checkoutStep) {
+            circle.className = 'w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold';
+            circle.textContent = i;
+            if (label) label.className = 'text-sm font-medium text-primary hidden sm:inline';
+        } else {
+            circle.className = 'w-8 h-8 rounded-full bg-gray-200 text-txt-muted flex items-center justify-center text-sm font-bold';
+            circle.textContent = i;
+            if (label) label.className = 'text-sm font-medium text-txt-muted hidden sm:inline';
+        }
+    }
+
+    // Populate order summary on step 3
+    if (checkoutStep === 3) {
+        const { subtotal, tax, total } = getCartTotals();
+        document.getElementById('checkoutSummaryItems').innerHTML = cart.map(c => {
+            const p = products.find(pr => pr.id === c.id);
+            return `<div class="flex justify-between"><span>${p.emoji} ${p.name} × ${c.qty}</span><span>\$${(p.price * c.qty).toFixed(2)}</span></div>`;
+        }).join('');
+        document.getElementById('checkoutSubtotal').textContent = `\$${subtotal.toFixed(2)}`;
+        document.getElementById('checkoutTax').textContent = `\$${tax.toFixed(2)}`;
+        document.getElementById('checkoutTotal').textContent = `\$${total.toFixed(2)}`;
+    }
+}
+
+function togglePickup() {
+    const fields = document.getElementById('shippingFields');
+    const checked = document.getElementById('pickupCheck').checked;
+    fields.style.display = checked ? 'none' : 'block';
+}
+
+function placeOrder() {
+    const val = id => (document.getElementById(id)?.value || '').trim();
+    const pickup = document.getElementById('pickupCheck').checked;
+    const street = val('coStreet'), city = val('coCity'), state = val('coState'), zip = val('coZip');
+    const address = [street, city, [state, zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+    let order;
+    try {
+        order = RRStore.placeOrder({
+            customer: val('coName'),
+            email: val('coEmail'),
+            phone: val('coPhone'),
+            address: street ? address : '',
+            pickup,
+            items: cart.map(c => ({ id: c.id, qty: c.qty })),
+            payment: 'Stripe',
+        });
+    } catch (e) {
+        showToast('Sorry — those items just sold out.', 'warning');
+        return;
+    }
+    document.getElementById('orderNumber').textContent = '#' + order.id;
+    goToStep(4);
+    // Clear the cart (stock already decremented in the shared store)
+    cart = [];
+    products = RRStore.getProducts();
+    renderProducts();
+    renderCart();
+    updateCartBadge();
+}
+
+// ========== TOAST NOTIFICATIONS ==========
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    const bgColor = type === 'warning' ? 'bg-warning' : 'bg-primary';
+    toast.className = `toast pointer-events-auto ${bgColor} text-white px-5 py-3 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium max-w-sm`;
+    toast.innerHTML = `<span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 2300);
+}
+
+// ========== SMOOTH SCROLL ==========
+document.querySelectorAll('a[href^="#"]').forEach(link => {
+    link.addEventListener('click', e => {
+        const id = link.getAttribute('href');
+        if (id === '#') return;
+        e.preventDefault();
+        const target = document.querySelector(id);
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
+});
+</script>
+</body>
+</html>

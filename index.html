@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R&R Gardening — Admin Dashboard</title>
+    <!-- All assets are bundled locally in /vendor so the mock works fully offline -->
+    <script src="vendor/tailwind.js"></script>
+    <script src="vendor/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="vendor/fonts.css">
+    <script src="js/store.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { light: '#4A7C59', DEFAULT: '#2D5A27', dark: '#1A3A18' },
+                        accent: { DEFAULT: '#E8A838', light: '#F5C76B', dark: '#C48A20' },
+                        surface: '#FFFFFF',
+                        page: '#F5F3EF',
+                        success: '#059669',
+                        warning: '#D97706',
+                        danger: '#DC2626',
+                        info: '#2563EB',
+                    },
+                    fontFamily: {
+                        display: ['Playfair Display', 'serif'],
+                        body: ['Inter', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #F5F3EF; color: #1F2937; }
+        .font-display { font-family: 'Playfair Display', serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c4c4c4; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
+        .sidebar-link { transition: all 0.2s ease; }
+        .sidebar-link:hover { background: rgba(255,255,255,0.08); }
+        .sidebar-link.active { background: rgba(232,168,56,0.15); border-right: 3px solid #E8A838; color: #E8A838; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04); border: 1px solid #f0eeea; transition: box-shadow 0.2s; }
+        .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+        table tbody tr { transition: background 0.15s; }
+        table tbody tr:hover { background: #f9f8f5; }
+        .modal-overlay { transition: opacity 0.25s; }
+        .modal-panel { transition: transform 0.25s, opacity 0.25s; }
+        .btn-primary { background: #2D5A27; color: #fff; border-radius: 8px; padding: 8px 20px; font-weight: 600; font-size: 0.875rem; transition: background 0.2s; }
+        .btn-primary:hover { background: #1A3A18; }
+        .btn-accent { background: #E8A838; color: #1F2937; border-radius: 8px; padding: 8px 20px; font-weight: 600; font-size: 0.875rem; transition: background 0.2s; }
+        .btn-accent:hover { background: #C48A20; }
+        .btn-outline { border: 1px solid #d1d5db; color: #374151; border-radius: 8px; padding: 8px 20px; font-weight: 500; font-size: 0.875rem; background: #fff; transition: all 0.2s; }
+        .btn-outline:hover { background: #f9fafb; border-color: #9ca3af; }
+        input, select, textarea { font-family: 'Inter', sans-serif; }
+        .input-field { border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; font-size: 0.875rem; width: 100%; transition: border-color 0.2s, box-shadow 0.2s; background: #fff; }
+        .input-field:focus { outline: none; border-color: #2D5A27; box-shadow: 0 0 0 3px rgba(45,90,39,0.1); }
+        .kpi-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+        .dropdown-menu { display: none; position: absolute; right: 0; top: 100%; min-width: 200px; background: #fff; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); border: 1px solid #e5e7eb; z-index: 50; overflow: hidden; }
+        .dropdown-menu.show { display: block; animation: fadeIn 0.15s ease; }
+    </style>
+</head>
+<body class="bg-page min-h-screen flex">
+
+<!-- ===== SIDEBAR ===== -->
+<aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-brand-dark text-white flex flex-col z-40 transition-transform duration-300 lg:translate-x-0 -translate-x-full lg:relative lg:flex">
+    <!-- Logo -->
+    <div class="px-6 py-6 border-b border-white/10">
+        <div class="flex items-center gap-3">
+            <span class="text-3xl" data-rr-logo="2.5rem">🌿</span>
+            <div>
+                <h1 class="font-display text-xl font-bold leading-tight tracking-wide">R&R Gardening</h1>
+                <span class="text-xs text-green-300/70 font-medium tracking-wider uppercase">Admin Panel</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 py-4 overflow-y-auto">
+        <ul class="space-y-1 px-3">
+            <li><a href="#" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="dashboard" onclick="switchTab('dashboard', this)">
+                <i class="fa-solid fa-gauge-high w-5 text-center"></i> Dashboard</a></li>
+            <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-300" data-tab="inventory" onclick="switchTab('inventory', this)">
+                <i class="fa-solid fa-boxes-stacked w-5 text-center"></i> Inventory</a></li>
+            <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-300" data-tab="orders" onclick="switchTab('orders', this)">
+                <i class="fa-solid fa-receipt w-5 text-center"></i> Orders</a></li>
+            <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-300" data-tab="customers" onclick="switchTab('customers', this)">
+                <i class="fa-solid fa-users w-5 text-center"></i> Customers</a></li>
+            <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-300" data-tab="reports" onclick="switchTab('reports', this)">
+                <i class="fa-solid fa-chart-pie w-5 text-center"></i> Reports</a></li>
+            <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-300" data-tab="integrations" onclick="switchTab('integrations', this)">
+                <i class="fa-solid fa-plug w-5 text-center"></i> Integrations</a></li>
+            <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-300" data-tab="settings" onclick="switchTab('settings', this)">
+                <i class="fa-solid fa-gear w-5 text-center"></i> Settings</a></li>
+        </ul>
+    </nav>
+
+    <!-- Demo Controls -->
+    <div class="px-4 pb-3">
+        <a href="shop.html" target="rr-shop" class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium text-green-200/80 hover:bg-white/10 transition"><i class="fa-solid fa-store w-4 text-center"></i> Open Customer Shop</a>
+        <button onclick="resetDemoData()" class="w-full flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium text-green-200/60 hover:bg-white/10 hover:text-white transition"><i class="fa-solid fa-rotate-left w-4 text-center"></i> Reset Demo Data</button>
+    </div>
+
+    <!-- User Area -->
+    <div class="px-4 py-4 border-t border-white/10">
+        <div class="flex items-center gap-3 px-2">
+            <div class="w-9 h-9 rounded-full bg-brand flex items-center justify-center text-sm font-bold text-white">AU</div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium truncate">Admin User</p>
+                <p class="text-xs text-green-300/60 truncate">admin@rrgardening.com</p>
+            </div>
+            <i class="fa-solid fa-ellipsis-vertical text-gray-400 text-sm cursor-pointer hover:text-white"></i>
+        </div>
+    </div>
+</aside>
+
+<!-- Mobile Sidebar Overlay -->
+<div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+<!-- ===== MAIN ===== -->
+<div class="flex-1 flex flex-col min-h-screen lg:ml-0">
+
+    <!-- Top Bar -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-20">
+        <div class="flex items-center justify-between px-4 lg:px-8 h-16">
+            <!-- Left: hamburger + breadcrumb -->
+            <div class="flex items-center gap-4">
+                <button class="lg:hidden text-gray-500 hover:text-gray-700" onclick="toggleSidebar()">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <nav class="text-sm text-gray-500 hidden sm:flex items-center gap-2">
+                    <span class="text-brand font-medium">R&R Gardening</span>
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                    <span id="breadcrumb-current" class="text-gray-700 font-medium">Dashboard</span>
+                </nav>
+            </div>
+            <!-- Right: shop link, bell, user -->
+            <div class="flex items-center gap-4">
+                <a href="shop.html" target="rr-shop" class="hidden sm:flex items-center gap-2 text-sm text-brand font-medium hover:text-brand-dark transition">
+                    <i class="fa-solid fa-store"></i> Shop
+                </a>
+                <div class="relative">
+                    <button class="relative text-gray-500 hover:text-gray-700 p-2">
+                        <i class="fa-solid fa-bell text-lg"></i>
+                        <span class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-danger text-white text-[10px] font-bold rounded-full flex items-center justify-center" id="notifBadge">3</span>
+                    </button>
+                </div>
+                <div class="relative" id="userDropdownContainer">
+                    <button onclick="document.getElementById('userDropdown').classList.toggle('show')" class="flex items-center gap-2 hover:bg-gray-50 rounded-lg px-2 py-1.5 transition">
+                        <div class="w-8 h-8 rounded-full bg-brand text-white flex items-center justify-center text-xs font-bold">AU</div>
+                        <span class="text-sm font-medium text-gray-700 hidden sm:block">Admin User</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 hidden sm:block"></i>
+                    </button>
+                    <div id="userDropdown" class="dropdown-menu mt-2">
+                        <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"><i class="fa-solid fa-user w-4 text-center text-gray-400"></i> Profile</a>
+                        <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onclick="event.preventDefault();switchTab('settings',document.querySelector('[data-tab=settings]'))"><i class="fa-solid fa-gear w-4 text-center text-gray-400"></i> Settings</a>
+                        <hr class="my-1 border-gray-100">
+                        <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-danger hover:bg-red-50"><i class="fa-solid fa-right-from-bracket w-4 text-center"></i> Sign Out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="flex-1 p-4 lg:p-8 overflow-y-auto">
+
+<!-- ========================================== -->
+<!--              DASHBOARD TAB                 -->
+<!-- ========================================== -->
+<div id="tab-dashboard" class="tab-content active">
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+        <!-- Revenue -->
+        <div class="card p-5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Total Revenue</p>
+                    <p class="text-2xl font-bold mt-1" id="kpiRevenue">$47,832.50</p>
+                    <p class="text-xs text-success font-semibold mt-2 flex items-center gap-1"><i class="fa-solid fa-arrow-up text-[10px]"></i> 12.5% vs last month</p>
+                </div>
+                <div class="kpi-icon bg-green-50 text-brand"><i class="fa-solid fa-dollar-sign"></i></div>
+            </div>
+        </div>
+        <!-- Orders Today -->
+        <div class="card p-5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Orders Today</p>
+                    <p class="text-2xl font-bold mt-1" id="kpiOrdersToday">23</p>
+                    <p class="text-xs text-success font-semibold mt-2 flex items-center gap-1"><i class="fa-solid fa-arrow-up text-[10px]"></i> 8.3% vs yesterday</p>
+                </div>
+                <div class="kpi-icon bg-blue-50 text-info"><i class="fa-solid fa-cart-shopping"></i></div>
+            </div>
+        </div>
+        <!-- Total Products -->
+        <div class="card p-5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Total Products</p>
+                    <p class="text-2xl font-bold mt-1" id="kpiProducts">156</p>
+                    <p class="text-xs text-warning font-semibold mt-2 flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation text-[10px]"></i> <span id="kpiLowStock">4</span> low stock alerts</p>
+                </div>
+                <div class="kpi-icon bg-amber-50 text-warning"><i class="fa-solid fa-boxes-stacked"></i></div>
+            </div>
+        </div>
+        <!-- Active Customers -->
+        <div class="card p-5">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Active Customers</p>
+                    <p class="text-2xl font-bold mt-1" id="kpiCustomers">342</p>
+                    <p class="text-xs text-success font-semibold mt-2 flex items-center gap-1"><i class="fa-solid fa-arrow-up text-[10px]"></i> 15.2% vs last month</p>
+                </div>
+                <div class="kpi-icon bg-purple-50 text-purple-600"><i class="fa-solid fa-users"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Chart + Low Stock -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+        <div class="xl:col-span-2 card p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="font-display text-lg font-semibold">Revenue Overview</h2>
+                <select class="input-field w-auto text-xs py-1.5 px-3">
+                    <option>Last 6 Months</option>
+                    <option>Last 12 Months</option>
+                    <option>This Year</option>
+                </select>
+            </div>
+            <div class="relative w-full" style="height:260px"><canvas id="revenueChart"></canvas></div>
+        </div>
+        <div class="card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-display text-lg font-semibold">Low Stock Alerts</h2>
+                <span class="badge bg-red-100 text-danger" id="lowStockBadge">4 items</span>
+            </div>
+            <div class="space-y-3 max-h-[300px] overflow-y-auto pr-1" id="lowStockList">
+                <!-- rendered from shared store -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Selling + Recent Orders -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <!-- Top Selling Products -->
+        <div class="card p-6">
+            <h2 class="font-display text-lg font-semibold mb-4">Top Selling Products</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-100">
+                            <th class="text-left py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</th>
+                            <th class="text-left py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
+                            <th class="text-right py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Units Sold</th>
+                            <th class="text-right py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-gray-50">
+                            <td class="py-3 px-2 font-medium flex items-center gap-2"><span>🪻</span> Lavender (English)</td>
+                            <td class="py-3 px-2 text-gray-500">Perennials</td>
+                            <td class="py-3 px-2 text-right font-semibold">234</td>
+                            <td class="py-3 px-2 text-right font-semibold text-brand">$3,037.66</td>
+                        </tr>
+                        <tr class="border-b border-gray-50">
+                            <td class="py-3 px-2 font-medium flex items-center gap-2"><span>🍃</span> Potting Mix Premium</td>
+                            <td class="py-3 px-2 text-gray-500">Soil & Amendments</td>
+                            <td class="py-3 px-2 text-right font-semibold">189</td>
+                            <td class="py-3 px-2 text-right font-semibold text-brand">$2,456.01</td>
+                        </tr>
+                        <tr class="border-b border-gray-50">
+                            <td class="py-3 px-2 font-medium flex items-center gap-2"><span>🌱</span> Cherry Tomato Starts</td>
+                            <td class="py-3 px-2 text-gray-500">Annuals</td>
+                            <td class="py-3 px-2 text-right font-semibold">178</td>
+                            <td class="py-3 px-2 text-right font-semibold text-brand">$1,246.00</td>
+                        </tr>
+                        <tr class="border-b border-gray-50">
+                            <td class="py-3 px-2 font-medium flex items-center gap-2"><span>🪴</span> Succulent Trio Pack</td>
+                            <td class="py-3 px-2 text-gray-500">Succulents</td>
+                            <td class="py-3 px-2 text-right font-semibold">156</td>
+                            <td class="py-3 px-2 text-right font-semibold text-brand">$3,588.44</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-2 font-medium flex items-center gap-2"><span>🌿</span> Herb Garden Kit</td>
+                            <td class="py-3 px-2 text-gray-500">Herbs</td>
+                            <td class="py-3 px-2 text-right font-semibold">143</td>
+                            <td class="py-3 px-2 text-right font-semibold text-brand">$3,574.57</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-display text-lg font-semibold">Recent Orders</h2>
+                <a href="#" class="text-sm text-brand font-medium hover:underline" onclick="event.preventDefault();switchTab('orders',document.querySelector('[data-tab=orders]'))">View All</a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-100">
+                            <th class="text-left py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Order #</th>
+                            <th class="text-left py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer</th>
+                            <th class="text-right py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
+                            <th class="text-center py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentOrdersBody">
+                        <!-- rendered from shared store -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!--              INVENTORY TAB                 -->
+<!-- ========================================== -->
+<div id="tab-inventory" class="tab-content">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+            <h2 class="font-display text-2xl font-bold">Inventory Management</h2>
+            <p class="text-sm text-gray-500 mt-1">Manage your product catalog and stock levels</p>
+        </div>
+        <button class="btn-accent flex items-center gap-2 self-start" onclick="openModal('addProductModal')">
+            <i class="fa-solid fa-plus"></i> Add Product
+        </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="card p-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="relative">
+                <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input type="text" id="inventorySearch" class="input-field pl-9" placeholder="Search products..." oninput="filterInventory()">
+            </div>
+            <select id="categoryFilter" class="input-field" onchange="filterInventory()">
+                <option value="">All Categories</option>
+                <option>Annuals</option>
+                <option>Perennials</option>
+                <option>Shrubs & Trees</option>
+                <option>Succulents</option>
+                <option>Herbs</option>
+                <option>Seeds</option>
+                <option>Soil & Amendments</option>
+                <option>Pots & Containers</option>
+                <option>Tools</option>
+                <option>Fertilizers</option>
+            </select>
+            <select id="stockFilter" class="input-field" onchange="filterInventory()">
+                <option value="">All Stock Status</option>
+                <option value="in">In Stock</option>
+                <option value="low">Low Stock</option>
+                <option value="out">Out of Stock</option>
+            </select>
+            <select id="sortFilter" class="input-field" onchange="sortInventory()">
+                <option value="name-asc">Name (A-Z)</option>
+                <option value="name-desc">Name (Z-A)</option>
+                <option value="price-asc">Price (Low-High)</option>
+                <option value="price-desc">Price (High-Low)</option>
+                <option value="stock-asc">Stock (Low-High)</option>
+                <option value="stock-desc">Stock (High-Low)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Product Table -->
+    <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm" id="inventoryTable">
+                <thead>
+                    <tr class="bg-gray-50/80 border-b border-gray-200">
+                        <th class="w-10 py-3 px-4"><input type="checkbox" class="rounded"></th>
+                        <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</th>
+                        <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">SKU</th>
+                        <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
+                        <th class="text-right py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Price</th>
+                        <th class="text-right py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Cost</th>
+                        <th class="text-right py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock</th>
+                        <th class="text-center py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="text-center py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryBody">
+                    <!-- Filled by JS -->
+                </tbody>
+            </table>
+        </div>
+        <!-- Pagination -->
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100">
+            <p class="text-sm text-gray-500">Showing <span id="invShowing">1-10</span> of <span id="invTotal">24</span> products</p>
+            <div class="flex items-center gap-1">
+                <button class="btn-outline py-1.5 px-3 text-xs" onclick="changePage(-1)" id="prevBtn">Previous</button>
+                <button class="py-1.5 px-3 text-xs font-semibold rounded-lg bg-brand text-white" id="page1btn" onclick="goToPage(1)">1</button>
+                <button class="py-1.5 px-3 text-xs font-semibold rounded-lg hover:bg-gray-100" id="page2btn" onclick="goToPage(2)">2</button>
+                <button class="py-1.5 px-3 text-xs font-semibold rounded-lg hover:bg-gray-100" id="page3btn" onclick="goToPage(3)">3</button>
+                <button class="btn-outline py-1.5 px-3 text-xs" onclick="changePage(1)" id="nextBtn">Next</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!--                ORDERS TAB                  -->
+<!-- ========================================== -->
+<div id="tab-orders" class="tab-content">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+            <h2 class="font-display text-2xl font-bold">Order Management</h2>
+            <p class="text-sm text-gray-500 mt-1">Track and manage customer orders</p>
+        </div>
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <span class="font-semibold text-gray-700">47</span> total orders this month
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card p-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="relative">
+                <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input type="text" id="orderSearch" class="input-field pl-9" placeholder="Search orders..." oninput="filterOrders()">
+            </div>
+            <select id="orderStatusFilter" class="input-field" onchange="filterOrders()">
+                <option value="">All Statuses</option>
+                <option>Completed</option>
+                <option>Processing</option>
+                <option>Pending</option>
+                <option>Shipped</option>
+                <option>Cancelled</option>
+            </select>
+            <div class="flex gap-2">
+                <input type="date" class="input-field" value="2026-10-01">
+                <input type="date" class="input-field" value="2026-10-27">
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50/80 border-b border-gray-200">
+                        <th class="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Order #</th>
+                        <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer</th>
+                        <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="text-center py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Items</th>
+                        <th class="text-right py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
+                        <th class="text-center py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment</th>
+                        <th class="text-center py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="text-center py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!--              CUSTOMERS TAB                 -->
+<!-- ========================================== -->
+<div id="tab-customers" class="tab-content">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+            <h2 class="font-display text-2xl font-bold">Customers</h2>
+            <p class="text-sm text-gray-500 mt-1">View and manage your customer base</p>
+        </div>
+        <button class="btn-primary flex items-center gap-2 self-start"><i class="fa-solid fa-plus"></i> Add Customer</button>
+    </div>
+
+    <!-- Search -->
+    <div class="card p-4 mb-6">
+        <div class="relative max-w-md">
+            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+            <input type="text" class="input-field pl-9" placeholder="Search customers...">
+        </div>
+    </div>
+
+    <!-- Customers Table -->
+    <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50/80 border-b border-gray-200">
+                        <th class="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+                        <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                        <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Phone</th>
+                        <th class="text-center py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Orders</th>
+                        <th class="text-right py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Spent</th>
+                        <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Last Order</th>
+                        <th class="text-center py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">SM</div> Sarah Mitchell</div></td><td class="py-3 px-3 text-gray-500">sarah.m@email.com</td><td class="py-3 px-3 text-gray-500">(555) 123-4567</td><td class="py-3 px-3 text-center font-semibold">12</td><td class="py-3 px-3 text-right font-semibold">$1,847.30</td><td class="py-3 px-3 text-gray-500">Oct 26, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
+                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold">JC</div> James Chen</div></td><td class="py-3 px-3 text-gray-500">j.chen@email.com</td><td class="py-3 px-3 text-gray-500">(555) 234-5678</td><td class="py-3 px-3 text-center font-semibold">8</td><td class="py-3 px-3 text-right font-semibold">$1,234.56</td><td class="py-3 px-3 text-gray-500">Oct 25, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
+                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-xs font-bold">MG</div> Maria Garcia</div></td><td class="py-3 px-3 text-gray-500">maria.g@email.com</td><td class="py-3 px-3 text-gray-500">(555) 345-6789</td><td class="py-3 px-3 text-center font-semibold">15</td><td class="py-3 px-3 text-right font-semibold">$2,567.89</td><td class="py-3 px-3 text-gray-500">Oct 24, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
+                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-bold">DT</div> David Thompson</div></td><td class="py-3 px-3 text-gray-500">d.thompson@email.com</td><td class="py-3 px-3 text-gray-500">(555) 456-7890</td><td class="py-3 px-3 text-center font-semibold">5</td><td class="py-3 px-3 text-right font-semibold">$623.45</td><td class="py-3 px-3 text-gray-500">Oct 23, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
+                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-xs font-bold">ER</div> Emily Rodriguez</div></td><td class="py-3 px-3 text-gray-500">emily.r@email.com</td><td class="py-3 px-3 text-gray-500">(555) 567-8901</td><td class="py-3 px-3 text-center font-semibold">22</td><td class="py-3 px-3 text-right font-semibold">$4,123.67</td><td class="py-3 px-3 text-gray-500">Oct 22, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
+                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-xs font-bold">RK</div> Robert Kim</div></td><td class="py-3 px-3 text-gray-500">r.kim@email.com</td><td class="py-3 px-3 text-gray-500">(555) 678-9012</td><td class="py-3 px-3 text-center font-semibold">9</td><td class="py-3 px-3 text-right font-semibold">$1,456.78</td><td class="py-3 px-3 text-gray-500">Oct 21, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
+                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">LW</div> Lisa Wang</div></td><td class="py-3 px-3 text-gray-500">l.wang@email.com</td><td class="py-3 px-3 text-gray-500">(555) 789-0123</td><td class="py-3 px-3 text-center font-semibold">18</td><td class="py-3 px-3 text-right font-semibold">$3,890.12</td><td class="py-3 px-3 text-gray-500">Oct 20, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
+                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center text-xs font-bold">MP</div> Michael Patel</div></td><td class="py-3 px-3 text-gray-500">m.patel@email.com</td><td class="py-3 px-3 text-gray-500">(555) 890-1234</td><td class="py-3 px-3 text-center font-semibold">3</td><td class="py-3 px-3 text-right font-semibold">$234.56</td><td class="py-3 px-3 text-gray-500">Oct 18, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
+                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">AJ</div> Amanda Johnson</div></td><td class="py-3 px-3 text-gray-500">a.johnson@email.com</td><td class="py-3 px-3 text-gray-500">(555) 901-2345</td><td class="py-3 px-3 text-center font-semibold">14</td><td class="py-3 px-3 text-right font-semibold">$2,678.90</td><td class="py-3 px-3 text-gray-500">Oct 17, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
+                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center text-xs font-bold">CB</div> Chris Brown</div></td><td class="py-3 px-3 text-gray-500">c.brown@email.com</td><td class="py-3 px-3 text-gray-500">(555) 012-3456</td><td class="py-3 px-3 text-center font-semibold">7</td><td class="py-3 px-3 text-right font-semibold">$987.65</td><td class="py-3 px-3 text-gray-500">Oct 15, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
+                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-lime-100 text-lime-600 flex items-center justify-center text-xs font-bold">NL</div> Nancy Liu</div></td><td class="py-3 px-3 text-gray-500">n.liu@email.com</td><td class="py-3 px-3 text-gray-500">(555) 321-6540</td><td class="py-3 px-3 text-center font-semibold">11</td><td class="py-3 px-3 text-right font-semibold">$2,145.30</td><td class="py-3 px-3 text-gray-500">Oct 14, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
+                    <tr><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center text-xs font-bold">TW</div> Tom Wilson</div></td><td class="py-3 px-3 text-gray-500">t.wilson@email.com</td><td class="py-3 px-3 text-gray-500">(555) 654-3210</td><td class="py-3 px-3 text-center font-semibold">6</td><td class="py-3 px-3 text-right font-semibold">$876.40</td><td class="py-3 px-3 text-gray-500">Oct 12, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!--              REPORTS TAB                   -->
+<!-- ========================================== -->
+<div id="tab-reports" class="tab-content">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+            <h2 class="font-display text-2xl font-bold">Reports & Analytics</h2>
+            <p class="text-sm text-gray-500 mt-1">Financial summaries and business insights</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <input type="date" class="input-field w-auto" value="2026-05-01">
+            <span class="text-gray-400">to</span>
+            <input type="date" class="input-field w-auto" value="2026-10-31">
+            <button class="btn-outline flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
+            <button class="btn-outline flex items-center gap-2"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+        </div>
+    </div>
+
+    <!-- Financial Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+        <div class="card p-5">
+            <p class="text-sm text-gray-500 font-medium">Gross Revenue</p>
+            <p class="text-2xl font-bold mt-1">$47,832.50</p>
+            <div class="w-full h-1.5 bg-gray-100 rounded-full mt-3"><div class="h-1.5 bg-brand rounded-full" style="width:100%"></div></div>
+        </div>
+        <div class="card p-5">
+            <p class="text-sm text-gray-500 font-medium">Cost of Goods</p>
+            <p class="text-2xl font-bold mt-1">$21,274.00</p>
+            <div class="w-full h-1.5 bg-gray-100 rounded-full mt-3"><div class="h-1.5 bg-danger rounded-full" style="width:44.5%"></div></div>
+        </div>
+        <div class="card p-5">
+            <p class="text-sm text-gray-500 font-medium">Gross Profit</p>
+            <p class="text-2xl font-bold mt-1 text-success">$26,558.50</p>
+            <div class="w-full h-1.5 bg-gray-100 rounded-full mt-3"><div class="h-1.5 bg-success rounded-full" style="width:55.5%"></div></div>
+        </div>
+        <div class="card p-5">
+            <p class="text-sm text-gray-500 font-medium">Profit Margin</p>
+            <p class="text-2xl font-bold mt-1">55.5%</p>
+            <div class="w-full h-1.5 bg-gray-100 rounded-full mt-3"><div class="h-1.5 bg-info rounded-full" style="width:55.5%"></div></div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+        <div class="card p-6">
+            <h3 class="font-display text-lg font-semibold mb-4">Revenue vs Expenses</h3>
+            <div class="relative w-full" style="height:280px"><canvas id="revenueExpenseChart"></canvas></div>
+        </div>
+        <div class="card p-6">
+            <h3 class="font-display text-lg font-semibold mb-4">Revenue by Category</h3>
+            <div class="relative w-full" style="height:280px"><canvas id="categoryChart"></canvas></div>
+        </div>
+        <div class="card p-6">
+            <h3 class="font-display text-lg font-semibold mb-4">Monthly Profit Trend</h3>
+            <div class="relative w-full" style="height:280px"><canvas id="profitChart"></canvas></div>
+        </div>
+        <div class="card p-6">
+            <h3 class="font-display text-lg font-semibold mb-4">Top 10 Products by Revenue</h3>
+            <div class="relative w-full" style="height:280px"><canvas id="topProductsChart"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Sales Breakdown Table -->
+    <div class="card p-6">
+        <h3 class="font-display text-lg font-semibold mb-4">Monthly Sales Breakdown</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-gray-200">
+                        <th class="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Month</th>
+                        <th class="text-right py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Revenue</th>
+                        <th class="text-right py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">COGS</th>
+                        <th class="text-right py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Gross Profit</th>
+                        <th class="text-right py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Orders</th>
+                        <th class="text-right py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Avg Order</th>
+                        <th class="text-center py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Margin</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-b border-gray-50"><td class="py-3 px-3 font-medium">May 2026</td><td class="py-3 px-3 text-right">$32,100.00</td><td class="py-3 px-3 text-right text-gray-500">$14,445.00</td><td class="py-3 px-3 text-right text-success font-semibold">$17,655.00</td><td class="py-3 px-3 text-right">128</td><td class="py-3 px-3 text-right">$250.78</td><td class="py-3 px-3 text-center"><span class="badge bg-green-100 text-success">55.0%</span></td></tr>
+                    <tr class="border-b border-gray-50"><td class="py-3 px-3 font-medium">June 2026</td><td class="py-3 px-3 text-right">$36,450.00</td><td class="py-3 px-3 text-right text-gray-500">$16,038.00</td><td class="py-3 px-3 text-right text-success font-semibold">$20,412.00</td><td class="py-3 px-3 text-right">145</td><td class="py-3 px-3 text-right">$251.38</td><td class="py-3 px-3 text-center"><span class="badge bg-green-100 text-success">56.0%</span></td></tr>
+                    <tr class="border-b border-gray-50"><td class="py-3 px-3 font-medium">July 2026</td><td class="py-3 px-3 text-right">$41,200.00</td><td class="py-3 px-3 text-right text-gray-500">$18,128.00</td><td class="py-3 px-3 text-right text-success font-semibold">$23,072.00</td><td class="py-3 px-3 text-right">164</td><td class="py-3 px-3 text-right">$251.22</td><td class="py-3 px-3 text-center"><span class="badge bg-green-100 text-success">56.0%</span></td></tr>
+                    <tr class="border-b border-gray-50"><td class="py-3 px-3 font-medium">August 2026</td><td class="py-3 px-3 text-right">$38,900.00</td><td class="py-3 px-3 text-right text-gray-500">$17,505.00</td><td class="py-3 px-3 text-right text-success font-semibold">$21,395.00</td><td class="py-3 px-3 text-right">152</td><td class="py-3 px-3 text-right">$255.92</td><td class="py-3 px-3 text-center"><span class="badge bg-green-100 text-success">55.0%</span></td></tr>
+                    <tr class="border-b border-gray-50"><td class="py-3 px-3 font-medium">September 2026</td><td class="py-3 px-3 text-right">$44,100.00</td><td class="py-3 px-3 text-right text-gray-500">$19,404.00</td><td class="py-3 px-3 text-right text-success font-semibold">$24,696.00</td><td class="py-3 px-3 text-right">171</td><td class="py-3 px-3 text-right">$257.89</td><td class="py-3 px-3 text-center"><span class="badge bg-green-100 text-success">56.0%</span></td></tr>
+                    <tr><td class="py-3 px-3 font-medium">October 2026</td><td class="py-3 px-3 text-right">$47,832.50</td><td class="py-3 px-3 text-right text-gray-500">$21,274.00</td><td class="py-3 px-3 text-right text-success font-semibold">$26,558.50</td><td class="py-3 px-3 text-right">186</td><td class="py-3 px-3 text-right">$257.16</td><td class="py-3 px-3 text-center"><span class="badge bg-green-100 text-success">55.5%</span></td></tr>
+                </tbody>
+                <tfoot>
+                    <tr class="border-t-2 border-gray-200 bg-gray-50/50">
+                        <td class="py-3 px-3 font-bold">Total</td>
+                        <td class="py-3 px-3 text-right font-bold">$240,582.50</td>
+                        <td class="py-3 px-3 text-right font-bold text-gray-500">$106,794.00</td>
+                        <td class="py-3 px-3 text-right font-bold text-success">$133,788.50</td>
+                        <td class="py-3 px-3 text-right font-bold">946</td>
+                        <td class="py-3 px-3 text-right font-bold">$254.32</td>
+                        <td class="py-3 px-3 text-center"><span class="badge bg-green-100 text-success font-bold">55.6%</span></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!--           INTEGRATIONS TAB                 -->
+<!-- ========================================== -->
+<div id="tab-integrations" class="tab-content">
+    <div class="mb-6">
+        <h2 class="font-display text-2xl font-bold">Integrations</h2>
+        <p class="text-sm text-gray-500 mt-1">Connect your favorite tools and services</p>
+    </div>
+
+    <!-- Accounting -->
+    <h3 class="font-display text-lg font-semibold mb-4">Accounting</h3>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="card p-6">
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-green-50 flex items-center justify-center text-2xl">📊</div>
+                    <div>
+                        <h4 class="font-semibold text-lg">QuickBooks</h4>
+                        <p class="text-sm text-gray-500">Accounting & bookkeeping</p>
+                    </div>
+                </div>
+                <span class="badge bg-green-100 text-success">Connected</span>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4 mb-4 space-y-2 text-sm">
+                <div class="flex justify-between"><span class="text-gray-500">Last synced</span><span class="font-medium">Oct 26, 2026, 3:45 PM</span></div>
+                <div class="flex justify-between"><span class="text-gray-500">Auto-sync</span><span class="font-medium">Every 6 hours</span></div>
+                <div class="flex justify-between"><span class="text-gray-500">Synced records</span><span class="font-medium">1,247 transactions</span></div>
+            </div>
+            <div class="flex items-center gap-3 mb-4">
+                <select class="input-field w-auto text-sm">
+                    <option>Every 6 hours</option>
+                    <option>Every hour</option>
+                    <option>Every 12 hours</option>
+                    <option>Daily</option>
+                </select>
+                <span class="text-sm text-gray-500">Auto-sync frequency</span>
+            </div>
+            <div class="border-t border-gray-100 pt-4">
+                <h5 class="text-sm font-semibold mb-3">Account Mapping</h5>
+                <div class="space-y-2 text-sm">
+                    <div class="flex items-center justify-between py-1"><span class="text-gray-500">Sales Revenue</span><span class="font-medium">4000 – Product Sales</span></div>
+                    <div class="flex items-center justify-between py-1"><span class="text-gray-500">Cost of Goods</span><span class="font-medium">5000 – COGS</span></div>
+                    <div class="flex items-center justify-between py-1"><span class="text-gray-500">Tax Collected</span><span class="font-medium">2100 – Sales Tax Payable</span></div>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-4">
+                <button class="btn-primary text-sm">Sync Now</button>
+                <button class="btn-outline text-sm text-danger border-red-200 hover:bg-red-50">Disconnect</button>
+            </div>
+        </div>
+
+        <div class="card p-6 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-center min-h-[200px]">
+            <div class="w-14 h-14 rounded-xl bg-gray-50 flex items-center justify-center text-2xl mb-3">📒</div>
+            <h4 class="font-semibold text-lg mb-1">Xero</h4>
+            <p class="text-sm text-gray-500 mb-4">Cloud accounting software</p>
+            <button class="btn-primary text-sm">Connect Xero</button>
+        </div>
+    </div>
+
+    <!-- Payment Processors -->
+    <h3 class="font-display text-lg font-semibold mb-4">Payment Processors</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="card p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-xl">💳</div>
+                <div>
+                    <h4 class="font-semibold">Stripe</h4>
+                    <span class="badge bg-green-100 text-success text-[11px]">Connected</span>
+                </div>
+            </div>
+            <div class="text-sm space-y-1 text-gray-500 mb-4">
+                <p>Processing fee: <span class="font-medium text-gray-700">2.9% + $0.30</span></p>
+                <p>Processed this month: <span class="font-medium text-gray-700">$42,150.00</span></p>
+            </div>
+            <button class="btn-outline text-sm w-full">Manage</button>
+        </div>
+        <div class="card p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-xl">⬛</div>
+                <div>
+                    <h4 class="font-semibold">Square</h4>
+                    <span class="badge bg-gray-100 text-gray-500 text-[11px]">Available</span>
+                </div>
+            </div>
+            <p class="text-sm text-gray-500 mb-4">Accept in-person & online payments with Square POS.</p>
+            <button class="btn-primary text-sm w-full">Connect</button>
+        </div>
+        <div class="card p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-xl">🅿️</div>
+                <div>
+                    <h4 class="font-semibold">PayPal</h4>
+                    <span class="badge bg-gray-100 text-gray-500 text-[11px]">Available</span>
+                </div>
+            </div>
+            <p class="text-sm text-gray-500 mb-4">Accept PayPal and Venmo payments from customers.</p>
+            <button class="btn-primary text-sm w-full">Connect</button>
+        </div>
+    </div>
+
+    <!-- Shipping -->
+    <h3 class="font-display text-lg font-semibold mb-4">Shipping & Fulfillment</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="card p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-xl">📦</div>
+                <div>
+                    <h4 class="font-semibold">USPS</h4>
+                    <span class="badge bg-green-100 text-success text-[11px]">Connected</span>
+                </div>
+            </div>
+            <p class="text-sm text-gray-500 mb-4">Priority & Ground shipping with discounted rates.</p>
+            <button class="btn-outline text-sm w-full">Manage</button>
+        </div>
+        <div class="card p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-xl">🟤</div>
+                <div>
+                    <h4 class="font-semibold">UPS</h4>
+                    <span class="badge bg-gray-100 text-gray-500 text-[11px]">Available</span>
+                </div>
+            </div>
+            <p class="text-sm text-gray-500 mb-4">Reliable ground and express shipping services.</p>
+            <button class="btn-primary text-sm w-full">Connect</button>
+        </div>
+        <div class="card p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-xl">✈️</div>
+                <div>
+                    <h4 class="font-semibold">FedEx</h4>
+                    <span class="badge bg-gray-100 text-gray-500 text-[11px]">Available</span>
+                </div>
+            </div>
+            <p class="text-sm text-gray-500 mb-4">Fast and reliable express delivery options.</p>
+            <button class="btn-primary text-sm w-full">Connect</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!--              SETTINGS TAB                  -->
+<!-- ========================================== -->
+<div id="tab-settings" class="tab-content">
+    <div class="mb-6">
+        <h2 class="font-display text-2xl font-bold">Settings</h2>
+        <p class="text-sm text-gray-500 mt-1">Manage your store configuration</p>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <!-- Store Info -->
+        <div class="xl:col-span-2 space-y-6">
+            <div class="card p-6">
+                <h3 class="font-display text-lg font-semibold mb-5">Store Information</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Store Name</label>
+                        <input type="text" class="input-field" value="R&R Gardening">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" class="input-field" value="info@rrgardening.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                        <input type="tel" class="input-field" value="(555) 234-5678">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                        <input type="url" class="input-field" value="https://www.rrgardening.com">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                        <input type="text" class="input-field" value="1247 Greenhouse Lane, Portland, OR 97201">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tax Rate</label>
+                        <input type="text" class="input-field" value="8.5%">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                        <select class="input-field">
+                            <option selected>USD – US Dollar</option>
+                            <option>CAD – Canadian Dollar</option>
+                            <option>EUR – Euro</option>
+                            <option>GBP – British Pound</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-6">
+                    <button class="btn-primary">Save Changes</button>
+                </div>
+            </div>
+
+            <!-- Business Hours -->
+            <div class="card p-6">
+                <h3 class="font-display text-lg font-semibold mb-5">Business Hours</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-200">
+                                <th class="text-left py-2 px-3 text-xs font-semibold text-gray-500 uppercase">Day</th>
+                                <th class="text-left py-2 px-3 text-xs font-semibold text-gray-500 uppercase">Open</th>
+                                <th class="text-left py-2 px-3 text-xs font-semibold text-gray-500 uppercase">Close</th>
+                                <th class="text-center py-2 px-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gray-50"><td class="py-2.5 px-3 font-medium">Monday</td><td class="py-2.5 px-3"><input type="time" class="input-field w-auto" value="08:00"></td><td class="py-2.5 px-3"><input type="time" class="input-field w-auto" value="18:00"></td><td class="py-2.5 px-3 text-center"><span class="badge bg-green-100 text-success">Open</span></td></tr>
+                            <tr class="border-b border-gray-50"><td class="py-2.5 px-3 font-medium">Tuesday</td><td class="py-2.5 px-3"><input type="time" class="input-field w-auto" value="08:00"></td><td class="py-2.5 px-3"><input type="time" class="input-field w-auto" value="18:00"></td><td class="py-2.5 px-3 text-center"><span class="badge bg-green-100 text-success">Open</span></td></tr>
+                            <tr class="border-b border-gray-50"><td class="py-2.5 px-3 font-medium">Wednesday</td><td class="py-2.5 px-3"><input type="time" class="input-field w-auto" value="08:00"></td><td class="py-2.5 px-3"><input type="time" class="input-field w-auto" value="18:00"></td><td class="py-2.5 px-3 text-center"><span class="badge bg-green-100 text-success">Open</span></td></tr>
+                            <tr class="border-b border-gray-50"><td class="py-2.5 px-3 font-medium">Thursday</td><td class="py-2.5 px-3"><input type="time" class="input-field w-auto" value="08:00"></td><td class="py-2.5 px-3"><input type="time" class="input-field w-auto" value="18:00"></td><td class="py-2.5 px-3 text-center"><span class="badge bg-green-100 text-success">Open</span></td></tr>
+                            <tr class="border-b border-gray-50"><td class="py-2.5 px-3 font-medium">Friday</td><td class="py-2.5 px-3"><input type="time" class="input-field w-auto" value="08:00"></td><td class="py-2.5 px-3"><input type="time" class="input-field w-auto" value="18:00"></td><td class="py-2.5 px-3 text-center"><span class="badge bg-green-100 text-success">Open</span></td></tr>
+                            <tr class="border-b border-gray-50"><td class="py-2.5 px-3 font-medium">Saturday</td><td class="py-2.5 px-3"><input type="time" class="input-field w-auto" value="09:00"></td><td class="py-2.5 px-3"><input type="time" class="input-field w-auto" value="17:00"></td><td class="py-2.5 px-3 text-center"><span class="badge bg-green-100 text-success">Open</span></td></tr>
+                            <tr><td class="py-2.5 px-3 font-medium">Sunday</td><td class="py-2.5 px-3"><input type="time" class="input-field w-auto" value="10:00"></td><td class="py-2.5 px-3"><input type="time" class="input-field w-auto" value="16:00"></td><td class="py-2.5 px-3 text-center"><span class="badge bg-green-100 text-success">Open</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="flex justify-end mt-4">
+                    <button class="btn-primary">Save Hours</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="space-y-6">
+            <div class="card p-6">
+                <h3 class="font-display text-lg font-semibold mb-5">Notification Preferences</h3>
+                <div class="space-y-4">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" checked class="mt-1 rounded text-brand focus:ring-brand">
+                        <div><p class="text-sm font-medium">New Orders</p><p class="text-xs text-gray-500">Get notified when a new order is placed</p></div>
+                    </label>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" checked class="mt-1 rounded text-brand focus:ring-brand">
+                        <div><p class="text-sm font-medium">Low Stock Alerts</p><p class="text-xs text-gray-500">Alert when products fall below threshold</p></div>
+                    </label>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" checked class="mt-1 rounded text-brand focus:ring-brand">
+                        <div><p class="text-sm font-medium">Daily Sales Summary</p><p class="text-xs text-gray-500">Receive a daily recap of sales activity</p></div>
+                    </label>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" class="mt-1 rounded text-brand focus:ring-brand">
+                        <div><p class="text-sm font-medium">Customer Signups</p><p class="text-xs text-gray-500">Notify when new customers register</p></div>
+                    </label>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" checked class="mt-1 rounded text-brand focus:ring-brand">
+                        <div><p class="text-sm font-medium">Weekly Reports</p><p class="text-xs text-gray-500">Receive weekly analytics report via email</p></div>
+                    </label>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" class="mt-1 rounded text-brand focus:ring-brand">
+                        <div><p class="text-sm font-medium">Promotion Reminders</p><p class="text-xs text-gray-500">Get reminded about upcoming promotions</p></div>
+                    </label>
+                </div>
+                <div class="flex justify-end mt-6">
+                    <button class="btn-primary">Save Preferences</button>
+                </div>
+            </div>
+
+            <div class="card p-6">
+                <h3 class="font-display text-lg font-semibold mb-3">Danger Zone</h3>
+                <p class="text-sm text-gray-500 mb-4">Irreversible actions for your store account.</p>
+                <div class="space-y-3">
+                    <button class="btn-outline text-sm w-full text-danger border-red-200 hover:bg-red-50">Reset All Data</button>
+                    <button class="btn-outline text-sm w-full text-danger border-red-200 hover:bg-red-50">Delete Store</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    </main>
+</div>
+
+<!-- ========================================== -->
+<!--           ADD PRODUCT MODAL                -->
+<!-- ========================================== -->
+<div id="addProductModal" class="fixed inset-0 z-50 hidden">
+    <div class="modal-overlay absolute inset-0 bg-black/50" onclick="closeModal('addProductModal')"></div>
+    <div class="modal-panel absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-5">
+            <h3 class="font-display text-xl font-bold">Add New Product</h3>
+            <button onclick="closeModal('addProductModal')" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+        </div>
+        <form id="addProductForm" onsubmit="event.preventDefault(); saveNewProduct(this);">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                    <input name="name" type="text" class="input-field" placeholder="e.g., Lavender (English)" required>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+                        <input name="sku" type="text" class="input-field" placeholder="RR-CAT-001">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <select name="category" class="input-field">
+                            <option>Annuals</option>
+                            <option>Perennials</option>
+                            <option>Shrubs & Trees</option>
+                            <option>Succulents</option>
+                            <option>Herbs</option>
+                            <option>Seeds</option>
+                            <option>Soil & Amendments</option>
+                            <option>Pots & Containers</option>
+                            <option>Tools</option>
+                            <option>Fertilizers</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea name="desc" class="input-field" rows="3" placeholder="Product description..."></textarea>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
+                        <input name="price" type="number" class="input-field" placeholder="0.00" step="0.01" min="0" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Cost ($)</label>
+                        <input name="cost" type="number" class="input-field" placeholder="0.00" step="0.01" min="0">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+                        <input name="stock" type="number" class="input-field" placeholder="0" min="0" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                    <input type="url" class="input-field" placeholder="https://...">
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+                <button type="button" class="btn-outline" onclick="closeModal('addProductModal')">Cancel</button>
+                <button type="submit" class="btn-accent">Save Product</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!--           ORDER DETAIL MODAL               -->
+<!-- ========================================== -->
+<div id="orderDetailModal" class="fixed inset-0 z-50 hidden">
+    <div class="modal-overlay absolute inset-0 bg-black/50" onclick="closeModal('orderDetailModal')"></div>
+    <div class="modal-panel absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-5">
+            <h3 class="font-display text-xl font-bold" id="orderDetailTitle">Order #RRG-1047</h3>
+            <button onclick="closeModal('orderDetailModal')" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+        </div>
+        <div id="orderDetailContent">
+            <!-- filled by JS -->
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer" class="fixed bottom-6 right-6 z-[90] flex flex-col gap-2 items-end pointer-events-none"></div>
+
+<!-- ============================= JAVASCRIPT ============================= -->
+<script>
+// ── Navigation ──
+function switchTab(tabId, el) {
+    event && event.preventDefault();
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + tabId).classList.add('active');
+    document.querySelectorAll('.sidebar-link').forEach(l => { l.classList.remove('active'); l.classList.add('text-gray-300'); });
+    if (el) { el.classList.add('active'); el.classList.remove('text-gray-300'); }
+    const labels = { dashboard:'Dashboard', inventory:'Inventory', orders:'Orders', customers:'Customers', reports:'Reports & Analytics', integrations:'Integrations', settings:'Settings' };
+    document.getElementById('breadcrumb-current').textContent = labels[tabId] || tabId;
+    // Close mobile sidebar
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+    // Initialize charts if needed
+    if (tabId === 'dashboard') initDashboardCharts();
+    if (tabId === 'reports') initReportCharts();
+}
+
+function toggleSidebar() {
+    const sb = document.getElementById('sidebar');
+    const ov = document.getElementById('sidebarOverlay');
+    sb.classList.toggle('-translate-x-full');
+    ov.classList.toggle('hidden');
+}
+
+function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+// Close user dropdown on outside click
+document.addEventListener('click', function(e) {
+    const dd = document.getElementById('userDropdown');
+    const container = document.getElementById('userDropdownContainer');
+    if (dd && !container.contains(e.target)) dd.classList.remove('show');
+});
+
+// ── Inventory Data ──
+// Products & orders come from the shared store (js/store.js) — the shop writes to the same data.
+let inventoryProducts = RRStore.getProducts();
+
+function getStockStatus(stock) {
+    if (stock === 0) return { label: 'Out of Stock', class: 'bg-red-100 text-danger' };
+    if (stock <= 20) return { label: 'Low Stock', class: 'bg-yellow-100 text-warning' };
+    return { label: 'In Stock', class: 'bg-green-100 text-success' };
+}
+
+let currentPage = 1;
+const perPage = 10;
+let filteredProducts = [...inventoryProducts];
+
+function renderInventory() {
+    const body = document.getElementById('inventoryBody');
+    const start = (currentPage - 1) * perPage;
+    const page = filteredProducts.slice(start, start + perPage);
+    body.innerHTML = page.map(p => {
+        const s = getStockStatus(p.stock);
+        return `<tr class="border-b border-gray-50">
+            <td class="py-3 px-4"><input type="checkbox" class="rounded"></td>
+            <td class="py-3 px-3 font-medium"><div class="flex items-center gap-2"><span class="text-xl">${p.emoji}</span> ${p.name}</div></td>
+            <td class="py-3 px-3 text-gray-500 font-mono text-xs">${p.sku}</td>
+            <td class="py-3 px-3 text-gray-500">${p.category}</td>
+            <td class="py-3 px-3 text-right font-semibold">$${p.price.toFixed(2)}</td>
+            <td class="py-3 px-3 text-right text-gray-500">$${p.cost.toFixed(2)}</td>
+            <td class="py-3 px-3 text-right font-semibold">${p.stock}</td>
+            <td class="py-3 px-3 text-center"><span class="badge ${s.class}">${s.label}</span></td>
+            <td class="py-3 px-3 text-center">
+                <button class="text-gray-400 hover:text-brand mr-1"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button class="text-gray-400 hover:text-danger"><i class="fa-solid fa-trash"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
+    const total = filteredProducts.length;
+    const totalPages = Math.ceil(total / perPage);
+    document.getElementById('invShowing').textContent = total === 0 ? '0' : `${start+1}-${Math.min(start+perPage, total)}`;
+    document.getElementById('invTotal').textContent = total;
+    // Update page buttons
+    ['page1btn','page2btn','page3btn'].forEach((id,i) => {
+        const btn = document.getElementById(id);
+        if (i+1 <= totalPages) {
+            btn.style.display = '';
+            btn.className = (i+1 === currentPage)
+                ? 'py-1.5 px-3 text-xs font-semibold rounded-lg bg-brand text-white'
+                : 'py-1.5 px-3 text-xs font-semibold rounded-lg hover:bg-gray-100';
+        } else btn.style.display = 'none';
+    });
+}
+
+function filterInventory() {
+    const search = document.getElementById('inventorySearch').value.toLowerCase();
+    const cat = document.getElementById('categoryFilter').value;
+    const stock = document.getElementById('stockFilter').value;
+    filteredProducts = inventoryProducts.filter(p => {
+        if (search && !p.name.toLowerCase().includes(search) && !p.sku.toLowerCase().includes(search)) return false;
+        if (cat && p.category !== cat) return false;
+        if (stock === 'in' && p.stock <= 20) return false;
+        if (stock === 'low' && (p.stock === 0 || p.stock > 20)) return false;
+        if (stock === 'out' && p.stock !== 0) return false;
+        return true;
+    });
+    currentPage = 1;
+    sortInventory();
+}
+
+function sortInventory() {
+    const sort = document.getElementById('sortFilter').value;
+    const [key, dir] = sort.split('-');
+    filteredProducts.sort((a,b) => {
+        let va = key === 'name' ? a.name : (key === 'price' ? a.price : a.stock);
+        let vb = key === 'name' ? b.name : (key === 'price' ? b.price : b.stock);
+        if (typeof va === 'string') return dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+        return dir === 'asc' ? va - vb : vb - va;
+    });
+    renderInventory();
+}
+
+function changePage(d) { goToPage(currentPage + d); }
+function goToPage(p) {
+    const maxP = Math.ceil(filteredProducts.length / perPage);
+    if (p < 1 || p > maxP) return;
+    currentPage = p;
+    renderInventory();
+}
+
+// ── Orders Data ──
+let ordersData = RRStore.getOrders();
+
+function getStatusBadge(status) {
+    const map = {
+        'Completed': 'bg-green-100 text-success',
+        'Processing': 'bg-blue-100 text-info',
+        'Pending': 'bg-yellow-100 text-warning',
+        'Shipped': 'bg-purple-100 text-purple-600',
+        'Cancelled': 'bg-red-100 text-danger',
+    };
+    return `<span class="badge ${map[status] || 'bg-gray-100 text-gray-500'}">${status}</span>`;
+}
+
+function renderOrders() {
+    const search = document.getElementById('orderSearch').value.toLowerCase();
+    const statusF = document.getElementById('orderStatusFilter').value;
+    const filtered = ordersData.filter(o => {
+        if (search && !o.id.toLowerCase().includes(search) && !o.customer.toLowerCase().includes(search)) return false;
+        if (statusF && o.status !== statusF) return false;
+        return true;
+    });
+    document.getElementById('ordersBody').innerHTML = filtered.map(o => `
+        <tr class="border-b border-gray-50 cursor-pointer" onclick="showOrderDetail('${o.id}')">
+            <td class="py-3 px-4 font-medium text-brand">#${o.id}</td>
+            <td class="py-3 px-3">${RRStore.esc(o.customer)}${o.source === 'online' ? ' <span class="badge bg-amber-100 text-amber-700 ml-1"><i class="fa-solid fa-globe text-[9px] mr-1"></i>Web</span>' : ''}</td>
+            <td class="py-3 px-3 text-gray-500">${o.date}</td>
+            <td class="py-3 px-3 text-center">${o.items}</td>
+            <td class="py-3 px-3 text-right font-semibold">$${o.total.toFixed(2)}</td>
+            <td class="py-3 px-3 text-center"><span class="badge bg-gray-100 text-gray-600">${o.payment}</span></td>
+            <td class="py-3 px-3 text-center">${getStatusBadge(o.status)}</td>
+            <td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button></td>
+        </tr>
+    `).join('');
+}
+
+function filterOrders() { renderOrders(); }
+
+function showOrderDetail(orderId) {
+    const o = ordersData.find(x => x.id === orderId);
+    if (!o) return;
+    document.getElementById('orderDetailTitle').textContent = 'Order #' + o.id;
+    const subtotal = o.products.reduce((s,p) => s + p.qty * p.price, 0);
+    const tax = subtotal * 0.085;
+    document.getElementById('orderDetailContent').innerHTML = `
+        <div class="grid grid-cols-2 gap-6 mb-6">
+            <div>
+                <h4 class="text-sm font-semibold text-gray-500 uppercase mb-2">Customer</h4>
+                <p class="font-medium">${RRStore.esc(o.customer)}</p>
+                <p class="text-sm text-gray-500">${RRStore.esc(o.email)}</p>
+                ${o.phone ? `<p class="text-sm text-gray-500">${RRStore.esc(o.phone)}</p>` : ''}
+                <p class="text-sm text-gray-500">${RRStore.esc(o.address)}</p>
+            </div>
+            <div class="text-right">
+                <h4 class="text-sm font-semibold text-gray-500 uppercase mb-2">Order Info</h4>
+                <p class="text-sm">Date: <span class="font-medium">${o.date}</span></p>
+                <p class="text-sm">Payment: <span class="font-medium">${o.payment}</span></p>
+                <p class="text-sm mt-1">${o.source === 'online' ? '<span class="badge bg-amber-100 text-amber-700 mr-1">Online Shop</span>' : ''}${getStatusBadge(o.status)}</p>
+                <label class="block text-xs text-gray-500 mt-3 mb-1">Update status</label>
+                <select class="input-field w-auto text-xs py-1.5 px-3 inline-block" onchange="setOrderStatus('${o.id}', this.value)">${['Pending','Processing','Shipped','Completed','Cancelled'].map(st => `<option ${st === o.status ? 'selected' : ''}>${st}</option>`).join('')}</select>
+            </div>
+        </div>
+        <table class="w-full text-sm mb-4">
+            <thead><tr class="border-b border-gray-200">
+                <th class="text-left py-2 text-xs font-semibold text-gray-500 uppercase">Item</th>
+                <th class="text-center py-2 text-xs font-semibold text-gray-500 uppercase">Qty</th>
+                <th class="text-right py-2 text-xs font-semibold text-gray-500 uppercase">Price</th>
+                <th class="text-right py-2 text-xs font-semibold text-gray-500 uppercase">Total</th>
+            </tr></thead>
+            <tbody>
+                ${o.products.map(p => `<tr class="border-b border-gray-50">
+                    <td class="py-2 font-medium">${p.name}</td>
+                    <td class="py-2 text-center">${p.qty}</td>
+                    <td class="py-2 text-right">$${p.price.toFixed(2)}</td>
+                    <td class="py-2 text-right font-semibold">$${(p.qty*p.price).toFixed(2)}</td>
+                </tr>`).join('')}
+            </tbody>
+        </table>
+        <div class="border-t border-gray-200 pt-3 space-y-1 text-sm">
+            <div class="flex justify-between"><span class="text-gray-500">Subtotal</span><span class="font-medium">$${subtotal.toFixed(2)}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Tax (8.5%)</span><span class="font-medium">$${tax.toFixed(2)}</span></div>
+            <div class="flex justify-between text-base font-bold pt-2 border-t border-gray-100"><span>Total</span><span>$${(subtotal+tax).toFixed(2)}</span></div>
+        </div>
+    `;
+    openModal('orderDetailModal');
+}
+
+// ── Charts ──
+// ── Live data from the shared store ──
+let knownOrderIds = new Set(ordersData.map(o => o.id));
+
+function refreshFromStore() {
+    inventoryProducts = RRStore.getProducts();
+    ordersData = RRStore.getOrders();
+    ordersData.forEach(o => {
+        if (!knownOrderIds.has(o.id)) {
+            knownOrderIds.add(o.id);
+            if (o.source === 'online') showToast('<i class="fa-solid fa-cart-shopping mr-1"></i> New online order #' + o.id + ' — ' + RRStore.money(o.total) + ' from ' + RRStore.esc(o.customer));
+        }
+    });
+    const keepPage = currentPage;
+    filterInventory();                       // re-applies search/filters/sort and renders
+    goToPage(keepPage);
+    renderOrders();
+    renderDashboardLive();
+}
+
+function renderDashboardLive() {
+    const st = RRStore.getStats();
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('kpiRevenue', RRStore.money(st.revenue));
+    set('kpiOrdersToday', st.ordersToday);
+    set('kpiProducts', st.productCount);
+    set('kpiLowStock', st.lowStock.length);
+    set('kpiCustomers', st.customers.toLocaleString());
+    set('lowStockBadge', st.lowStock.length + ' item' + (st.lowStock.length === 1 ? '' : 's'));
+
+    const pending = ordersData.filter(o => o.status === 'Pending').length;
+    const out = inventoryProducts.filter(p => p.stock === 0).length;
+    const badge = document.getElementById('notifBadge');
+    if (badge) { badge.textContent = pending + out; badge.style.display = (pending + out) ? '' : 'none'; }
+
+    document.getElementById('lowStockList').innerHTML = st.lowStock.length ? st.lowStock.map(p => {
+        const critical = p.stock <= 5;
+        const tone = critical ? 'bg-red-50 border-red-100' : 'bg-amber-50 border-amber-100';
+        const txt = critical ? 'text-danger' : 'text-warning';
+        return `<div class="flex items-center justify-between p-3 rounded-lg border ${tone}">
+            <div class="flex items-center gap-3 min-w-0">
+                <span class="text-xl">${p.emoji}</span>
+                <div class="min-w-0"><p class="text-sm font-semibold truncate">${RRStore.esc(p.name)}</p><p class="text-xs text-gray-500">SKU: ${RRStore.esc(p.sku)}</p></div>
+            </div>
+            <div class="text-right flex-shrink-0 ml-2">
+                <p class="text-sm font-bold ${txt}">${p.stock === 0 ? 'Out of stock' : p.stock + ' left'}</p>
+                <button onclick="reorderProduct(${p.id})" class="text-[11px] text-brand font-semibold hover:underline mt-0.5">Reorder +50</button>
+            </div>
+        </div>`;
+    }).join('') : '<p class="text-sm text-gray-500 text-center py-8">All products are well stocked 🎉</p>';
+
+    document.getElementById('recentOrdersBody').innerHTML = ordersData.slice(0, 6).map((o, i, arr) => `
+        <tr class="${i < arr.length - 1 ? 'border-b border-gray-50' : ''} cursor-pointer hover:bg-gray-50" onclick="showOrderDetail('${o.id}')">
+            <td class="py-3 px-2 font-medium">#${o.id}${o.source === 'online' ? ' <span class="badge bg-amber-100 text-amber-700 ml-1">NEW</span>' : ''}</td>
+            <td class="py-3 px-2 text-gray-600">${RRStore.esc(o.customer)}</td>
+            <td class="py-3 px-2 text-right font-semibold">${RRStore.money(o.total)}</td>
+            <td class="py-3 px-2 text-center">${getStatusBadge(o.status)}</td>
+        </tr>`).join('');
+
+    // Keep the current-month bar of the revenue chart in sync with live revenue
+    const ch = window.Chart && Chart.getChart('revenueChart');
+    if (ch) { ch.data.datasets.forEach(d => { d.data[d.data.length - 1] = Math.round(st.revenue * 100) / 100; }); ch.update('none'); }
+}
+
+function reorderProduct(id) {
+    const p = RRStore.adjustStock(id, 50);
+    if (p) showToast('<i class="fa-solid fa-truck mr-1"></i> Restocked ' + RRStore.esc(p.name) + ' — now ' + p.stock + ' in stock');
+}
+
+function saveNewProduct(form) {
+    const fd = new FormData(form);
+    const p = RRStore.addProduct({
+        name: fd.get('name').trim(),
+        sku: (fd.get('sku') || '').trim(),
+        category: fd.get('category'),
+        desc: (fd.get('desc') || '').trim(),
+        price: parseFloat(fd.get('price')) || 0,
+        cost: parseFloat(fd.get('cost')) || 0,
+        stock: parseInt(fd.get('stock'), 10) || 0,
+    });
+    form.reset();
+    closeModal('addProductModal');
+    showToast('<i class="fa-solid fa-circle-check mr-1"></i> ' + RRStore.esc(p.name) + ' added — now live in the shop');
+}
+
+function setOrderStatus(id, status) {
+    RRStore.updateOrderStatus(id, status);
+    showToast('Order #' + id + ' marked ' + status);
+}
+
+function resetDemoData() {
+    if (!confirm('Reset all demo data (products, stock levels and orders) back to the original sample set?')) return;
+    RRStore.reset();
+    knownOrderIds = new Set(RRStore.getOrders().map(o => o.id));
+    showToast('<i class="fa-solid fa-rotate-left mr-1"></i> Demo data reset');
+}
+
+function showToast(html) {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = 'pointer-events-auto bg-brand text-white px-5 py-3 rounded-xl shadow-lg text-sm font-medium max-w-sm';
+    t.style.cssText = 'opacity:0;transform:translateY(10px);transition:all .25s ease;';
+    t.innerHTML = html;
+    c.appendChild(t);
+    requestAnimationFrame(() => { t.style.opacity = '1'; t.style.transform = 'none'; });
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3500);
+}
+
+let dashboardChartsInit = false;
+let reportChartsInit = false;
+
+function initDashboardCharts() {
+    if (dashboardChartsInit) return;
+    dashboardChartsInit = true;
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+            datasets: [{
+                label: 'Revenue',
+                data: [32100, 36450, 41200, 38900, 44100, 47832],
+                backgroundColor: 'rgba(45,90,39,0.15)',
+                borderColor: '#2D5A27',
+                borderWidth: 2,
+                borderRadius: 6,
+                barPercentage: 0.6,
+            },{
+                label: 'Trend',
+                data: [32100, 36450, 41200, 38900, 44100, 47832],
+                type: 'line',
+                borderColor: '#E8A838',
+                backgroundColor: 'rgba(232,168,56,0.1)',
+                borderWidth: 3,
+                pointBackgroundColor: '#E8A838',
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                fill: true,
+                tension: 0.4,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: true, position: 'top', labels: { usePointStyle: true, padding: 20, font: { family: 'Inter', size: 12 } } } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { callback: v => '$' + (v/1000) + 'k', font: { family: 'Inter' } } },
+                x: { grid: { display: false }, ticks: { font: { family: 'Inter' } } }
+            }
+        }
+    });
+}
+
+function initReportCharts() {
+    if (reportChartsInit) return;
+    reportChartsInit = true;
+
+    // Revenue vs Expenses
+    new Chart(document.getElementById('revenueExpenseChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['May','Jun','Jul','Aug','Sep','Oct'],
+            datasets: [
+                { label:'Revenue', data:[32100,36450,41200,38900,44100,47832], backgroundColor:'rgba(45,90,39,0.7)', borderRadius:6, barPercentage:0.5 },
+                { label:'Expenses', data:[14445,16038,18128,17505,19404,21274], backgroundColor:'rgba(220,38,38,0.5)', borderRadius:6, barPercentage:0.5 }
+            ]
+        },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'top', labels:{usePointStyle:true, padding:15, font:{family:'Inter',size:12}} } }, scales:{ y:{beginAtZero:true, grid:{color:'rgba(0,0,0,0.04)'}, ticks:{callback:v=>'$'+(v/1000)+'k', font:{family:'Inter'}}}, x:{grid:{display:false}} } }
+    });
+
+    // Revenue by Category (doughnut)
+    new Chart(document.getElementById('categoryChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Perennials','Shrubs & Trees','Succulents','Annuals','Herbs','Soil & Amendments','Seeds','Pots & Containers','Tools','Fertilizers'],
+            datasets: [{
+                data: [8200, 7600, 6800, 5400, 5200, 4800, 3200, 3100, 2100, 1432],
+                backgroundColor: ['#2D5A27','#4A7C59','#059669','#E8A838','#D97706','#2563EB','#7C3AED','#DC2626','#6B7280','#0D9488'],
+                borderWidth: 2, borderColor: '#fff'
+            }]
+        },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{padding:12,usePointStyle:true, font:{family:'Inter',size:11}} } } }
+    });
+
+    // Monthly Profit Trend
+    new Chart(document.getElementById('profitChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: ['May','Jun','Jul','Aug','Sep','Oct'],
+            datasets: [{
+                label: 'Gross Profit',
+                data: [17655, 20412, 23072, 21395, 24696, 26558],
+                borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.08)',
+                borderWidth: 3, fill: true, tension: 0.4,
+                pointBackgroundColor: '#059669', pointRadius: 5, pointHoverRadius: 7
+            }]
+        },
+        options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ y:{beginAtZero:true, grid:{color:'rgba(0,0,0,0.04)'}, ticks:{callback:v=>'$'+(v/1000)+'k', font:{family:'Inter'}}}, x:{grid:{display:false}} } }
+    });
+
+    // Top 10 Products by Revenue (horizontal bar)
+    new Chart(document.getElementById('topProductsChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Succulent Trio','Herb Garden Kit','Lavender (English)','Japanese Maple','Potting Mix','Rose Bush','Cherry Tomato','Arborvitae','Ceramic Planter','Pruning Shears'],
+            datasets: [{
+                label: 'Revenue',
+                data: [3588, 3574, 3037, 2700, 2456, 2250, 1246, 1190, 1050, 900],
+                backgroundColor: ['#2D5A27','#4A7C59','#059669','#E8A838','#D97706','#2563EB','#7C3AED','#DC2626','#6B7280','#0D9488'],
+                borderRadius: 4, barPercentage: 0.7
+            }]
+        },
+        options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{beginAtZero:true, grid:{color:'rgba(0,0,0,0.04)'}, ticks:{callback:v=>'$'+v, font:{family:'Inter'}}}, y:{grid:{display:false}, ticks:{font:{family:'Inter',size:11}}} } }
+    });
+}
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', function() {
+    filteredProducts = [...inventoryProducts];
+    renderInventory();
+    renderOrders();
+    initDashboardCharts();
+    renderDashboardLive();
+    RRStore.subscribe(refreshFromStore);
+});
+</script>
+</body>
+</html>
