@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>R&R Gardening — Admin Dashboard</title>
+    <title>R&R Garden Center — Admin Dashboard</title>
     <!-- All assets are bundled locally in /vendor so the mock works fully offline -->
     <script src="vendor/tailwind.js"></script>
     <script src="vendor/chart.umd.min.js"></script>
@@ -15,17 +15,17 @@
             theme: {
                 extend: {
                     colors: {
-                        brand: { light: '#4A7C59', DEFAULT: '#2D5A27', dark: '#1A3A18' },
-                        accent: { DEFAULT: '#E8A838', light: '#F5C76B', dark: '#C48A20' },
+                        brand: { light: '#8BC34A', DEFAULT: '#3D7A1F', dark: '#21470F', pale: '#EEF7E4' },
+                        accent: { DEFAULT: '#8BC34A', light: '#D7EFC0', dark: '#6FA534' },
                         surface: '#FFFFFF',
-                        page: '#F5F3EF',
+                        page: '#F6F8F4',
                         success: '#059669',
                         warning: '#D97706',
                         danger: '#DC2626',
                         info: '#2563EB',
                     },
                     fontFamily: {
-                        display: ['Playfair Display', 'serif'],
+                        display: ['Inter', 'sans-serif'],
                         body: ['Inter', 'sans-serif'],
                     },
                 },
@@ -34,131 +34,149 @@
     </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #F5F3EF; color: #1F2937; }
-        .font-display { font-family: 'Playfair Display', serif; }
+        body { font-family: 'Inter', sans-serif; background: #F6F8F4; color: #1F2A1C; }
+        .font-display { font-family: 'Inter', sans-serif; letter-spacing: -0.02em; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #c4c4c4; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
-        .sidebar-link { transition: all 0.2s ease; }
-        .sidebar-link:hover { background: rgba(255,255,255,0.08); }
-        .sidebar-link.active { background: rgba(232,168,56,0.15); border-right: 3px solid #E8A838; color: #E8A838; }
+        ::-webkit-scrollbar-thumb { background: #cfd6ca; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #aab5a3; }
+
+        /* Sidebar */
+        .sidebar-link { position: relative; color: #8A9387; transition: color 0.2s, background 0.2s; }
+        .sidebar-link:hover { color: #21470F; background: #F3F8EE; }
+        .sidebar-link.active { color: #3D7A1F; font-weight: 600; }
+        .sidebar-link.active::before { content: ''; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 4px; border-radius: 0 4px 4px 0; background: #3D7A1F; }
+        .nav-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #1F2A1C; }
+
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        .card { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04); border: 1px solid #f0eeea; transition: box-shadow 0.2s; }
-        .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .card { background: #fff; border-radius: 18px; box-shadow: 0 1px 2px rgba(31,42,28,0.04), 0 8px 24px -12px rgba(31,42,28,0.08); border: 1px solid #EEF1EB; transition: box-shadow 0.2s, transform 0.2s; }
+        .card:hover { box-shadow: 0 2px 4px rgba(31,42,28,0.04), 0 14px 32px -14px rgba(31,42,28,0.14); }
         .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
         table tbody tr { transition: background 0.15s; }
-        table tbody tr:hover { background: #f9f8f5; }
+        table tbody tr:hover { background: #F8FAF6; }
         .modal-overlay { transition: opacity 0.25s; }
         .modal-panel { transition: transform 0.25s, opacity 0.25s; }
-        .btn-primary { background: #2D5A27; color: #fff; border-radius: 8px; padding: 8px 20px; font-weight: 600; font-size: 0.875rem; transition: background 0.2s; }
-        .btn-primary:hover { background: #1A3A18; }
-        .btn-accent { background: #E8A838; color: #1F2937; border-radius: 8px; padding: 8px 20px; font-weight: 600; font-size: 0.875rem; transition: background 0.2s; }
-        .btn-accent:hover { background: #C48A20; }
-        .btn-outline { border: 1px solid #d1d5db; color: #374151; border-radius: 8px; padding: 8px 20px; font-weight: 500; font-size: 0.875rem; background: #fff; transition: all 0.2s; }
-        .btn-outline:hover { background: #f9fafb; border-color: #9ca3af; }
+        .btn-primary { background: #3D7A1F; color: #fff; border-radius: 10px; padding: 9px 20px; font-weight: 600; font-size: 0.875rem; transition: background 0.2s; }
+        .btn-primary:hover { background: #21470F; }
+        .btn-accent { background: #3D7A1F; color: #fff; border-radius: 10px; padding: 9px 20px; font-weight: 600; font-size: 0.875rem; transition: background 0.2s; }
+        .btn-accent:hover { background: #21470F; }
+        .btn-outline { border: 1px solid #DDE3D8; color: #374151; border-radius: 10px; padding: 9px 20px; font-weight: 500; font-size: 0.875rem; background: #fff; transition: all 0.2s; }
+        .btn-outline:hover { background: #F6F8F4; border-color: #B9C4B1; }
         input, select, textarea { font-family: 'Inter', sans-serif; }
-        .input-field { border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; font-size: 0.875rem; width: 100%; transition: border-color 0.2s, box-shadow 0.2s; background: #fff; }
-        .input-field:focus { outline: none; border-color: #2D5A27; box-shadow: 0 0 0 3px rgba(45,90,39,0.1); }
+        .input-field { border: 1px solid #DDE3D8; border-radius: 10px; padding: 8px 12px; font-size: 0.875rem; width: 100%; transition: border-color 0.2s, box-shadow 0.2s; background: #fff; }
+        .input-field:focus { outline: none; border-color: #3D7A1F; box-shadow: 0 0 0 3px rgba(61,122,31,0.12); }
         .kpi-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
-        .dropdown-menu { display: none; position: absolute; right: 0; top: 100%; min-width: 200px; background: #fff; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); border: 1px solid #e5e7eb; z-index: 50; overflow: hidden; }
+        .dropdown-menu { display: none; position: absolute; right: 0; top: 100%; min-width: 200px; background: #fff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); border: 1px solid #e5e7eb; z-index: 50; overflow: hidden; }
         .dropdown-menu.show { display: block; animation: fadeIn 0.15s ease; }
+        .icon-btn { width: 40px; height: 40px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; color: #4B5548; background: #fff; border: 1px solid #EEF1EB; transition: all 0.2s; position: relative; }
+        .icon-btn:hover { color: #3D7A1F; border-color: #D7EFC0; background: #F3F8EE; }
+
+        /* Dashboard */
+        .section-title { font-size: 1.125rem; font-weight: 700; letter-spacing: -0.02em; color: #2F6A16; }
+        .view-all { font-size: 0.75rem; color: #8A9387; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; transition: color 0.2s; }
+        .view-all:hover { color: #3D7A1F; }
+        .hero { background: radial-gradient(120% 140% at 85% 20%, #2E5A1C 0%, #15301A 45%, #0B1C10 100%); }
+        .listing-card { cursor: pointer; }
+        .listing-card:hover { transform: translateY(-2px); }
+        .listing-card .go { opacity: 0; transform: translate(-4px, 4px); transition: all 0.2s; }
+        .listing-card:hover .go { opacity: 1; transform: none; }
+        .avatar { width: 36px; height: 36px; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+        .avatar-stack > * { margin-left: -8px; box-shadow: 0 0 0 2px #fff; }
+        .avatar-stack > *:first-child { margin-left: 0; }
+        /* Product cut-outs in the My Stats card */
+        .stat-plant { filter: drop-shadow(0 18px 16px rgba(31,42,28,0.28)); }
+        .stats-card { container-type: inline-size; }
+        @container (max-width: 290px) { .stat-plant-front { display: none; } }
     </style>
 </head>
 <body class="bg-page min-h-screen flex">
 
 <!-- ===== SIDEBAR ===== -->
-<aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-brand-dark text-white flex flex-col z-40 transition-transform duration-300 lg:translate-x-0 -translate-x-full lg:relative lg:flex">
+<aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-white border-r border-[#EEF1EB] flex flex-col z-40 transition-transform duration-300 lg:translate-x-0 -translate-x-full lg:sticky lg:h-screen lg:flex">
     <!-- Logo -->
-    <div class="px-6 py-6 border-b border-white/10">
-        <div class="flex items-center gap-3">
-            <span class="text-3xl" data-rr-logo="2.5rem">🌿</span>
-            <div>
-                <h1 class="font-display text-xl font-bold leading-tight tracking-wide">R&R Gardening</h1>
-                <span class="text-xs text-green-300/70 font-medium tracking-wider uppercase">Admin Panel</span>
-            </div>
-        </div>
+    <div class="px-6 pt-7 pb-6">
+        <h1><img src="assets/logo-green.png" alt="R&amp;R Garden Center" class="h-12 w-auto block"></h1>
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 py-4 overflow-y-auto">
+    <nav class="flex-1 overflow-y-auto">
         <ul class="space-y-1 px-3">
-            <li><a href="#" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="dashboard" onclick="switchTab('dashboard', this)">
+            <li><a href="#" class="sidebar-link active flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm" data-tab="dashboard" onclick="switchTab('dashboard', this)">
                 <i class="fa-solid fa-gauge-high w-5 text-center"></i> Dashboard</a></li>
-            <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-300" data-tab="inventory" onclick="switchTab('inventory', this)">
-                <i class="fa-solid fa-boxes-stacked w-5 text-center"></i> Inventory</a></li>
-            <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-300" data-tab="orders" onclick="switchTab('orders', this)">
+            <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm" data-tab="inventory" onclick="switchTab('inventory', this)">
+                <i class="fa-solid fa-seedling w-5 text-center"></i> Inventory</a></li>
+            <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm" data-tab="orders" onclick="switchTab('orders', this)">
                 <i class="fa-solid fa-receipt w-5 text-center"></i> Orders</a></li>
-            <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-300" data-tab="customers" onclick="switchTab('customers', this)">
+            <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm" data-tab="customers" onclick="switchTab('customers', this)">
                 <i class="fa-solid fa-users w-5 text-center"></i> Customers</a></li>
-            <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-300" data-tab="reports" onclick="switchTab('reports', this)">
-                <i class="fa-solid fa-chart-pie w-5 text-center"></i> Reports</a></li>
-            <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-300" data-tab="integrations" onclick="switchTab('integrations', this)">
+        </ul>
+        <p class="nav-label px-7 mt-7 mb-2">Manage</p>
+        <ul class="space-y-1 px-3">
+            <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm" data-tab="reports" onclick="switchTab('reports', this)">
+                <i class="fa-solid fa-chart-line w-5 text-center"></i> Reports</a></li>
+            <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm" data-tab="integrations" onclick="switchTab('integrations', this)">
                 <i class="fa-solid fa-plug w-5 text-center"></i> Integrations</a></li>
-            <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-300" data-tab="settings" onclick="switchTab('settings', this)">
+            <li><a href="#" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm" data-tab="settings" onclick="switchTab('settings', this)">
                 <i class="fa-solid fa-gear w-5 text-center"></i> Settings</a></li>
         </ul>
     </nav>
 
-    <!-- Demo Controls -->
-    <div class="px-4 pb-3">
-        <a href="shop.html" target="rr-shop" class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium text-green-200/80 hover:bg-white/10 transition"><i class="fa-solid fa-store w-4 text-center"></i> Open Customer Shop</a>
-        <button onclick="resetDemoData()" class="w-full flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium text-green-200/60 hover:bg-white/10 hover:text-white transition"><i class="fa-solid fa-rotate-left w-4 text-center"></i> Reset Demo Data</button>
-    </div>
-
-    <!-- User Area -->
-    <div class="px-4 py-4 border-t border-white/10">
-        <div class="flex items-center gap-3 px-2">
-            <div class="w-9 h-9 rounded-full bg-brand flex items-center justify-center text-sm font-bold text-white">AU</div>
-            <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium truncate">Admin User</p>
-                <p class="text-xs text-green-300/60 truncate">admin@rrgardening.com</p>
-            </div>
-            <i class="fa-solid fa-ellipsis-vertical text-gray-400 text-sm cursor-pointer hover:text-white"></i>
+    <!-- Shop card (demo controls) -->
+    <div class="p-4">
+        <div class="relative rounded-2xl bg-gradient-to-b from-[#E4F4D3] to-[#CDEBAF] px-4 pt-8 pb-4 text-center mt-6">
+            <span class="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-white shadow flex items-center justify-center text-brand"><i class="fa-solid fa-store"></i></span>
+            <p class="text-sm font-bold text-[#1F2A1C]">Customer Shop</p>
+            <p class="text-xs text-[#4B5548] mt-1 leading-relaxed">See your storefront exactly as customers do.</p>
+            <a href="shop.html" target="rr-shop" class="mt-3 block bg-white rounded-xl py-2 text-xs font-semibold text-[#1F2A1C] shadow-sm hover:text-brand transition">Open Customer Shop</a>
         </div>
+        <button onclick="resetDemoData()" class="w-full mt-2 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium text-[#8A9387] hover:text-brand transition"><i class="fa-solid fa-rotate-left"></i> Reset Demo Data</button>
     </div>
 </aside>
 
 <!-- Mobile Sidebar Overlay -->
-<div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
+<div id="sidebarOverlay" class="fixed inset-0 bg-black/40 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
 
 <!-- ===== MAIN ===== -->
-<div class="flex-1 flex flex-col min-h-screen lg:ml-0">
+<div class="flex-1 flex flex-col min-h-screen min-w-0">
 
     <!-- Top Bar -->
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-20">
-        <div class="flex items-center justify-between px-4 lg:px-8 h-16">
-            <!-- Left: hamburger + breadcrumb -->
-            <div class="flex items-center gap-4">
-                <button class="lg:hidden text-gray-500 hover:text-gray-700" onclick="toggleSidebar()">
-                    <i class="fa-solid fa-bars text-xl"></i>
+    <header class="bg-page/90 backdrop-blur sticky top-0 z-20">
+        <div class="flex items-center justify-between gap-4 px-4 lg:px-8 pt-6 pb-4">
+            <!-- Left: hamburger + page title -->
+            <div class="flex items-center gap-4 min-w-0">
+                <button class="lg:hidden icon-btn flex-shrink-0" onclick="toggleSidebar()" aria-label="Open menu">
+                    <i class="fa-solid fa-bars"></i>
                 </button>
-                <nav class="text-sm text-gray-500 hidden sm:flex items-center gap-2">
-                    <span class="text-brand font-medium">R&R Gardening</span>
-                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                    <span id="breadcrumb-current" class="text-gray-700 font-medium">Dashboard</span>
-                </nav>
-            </div>
-            <!-- Right: shop link, bell, user -->
-            <div class="flex items-center gap-4">
-                <a href="shop.html" target="rr-shop" class="hidden sm:flex items-center gap-2 text-sm text-brand font-medium hover:text-brand-dark transition">
-                    <i class="fa-solid fa-store"></i> Shop
-                </a>
-                <div class="relative">
-                    <button class="relative text-gray-500 hover:text-gray-700 p-2">
-                        <i class="fa-solid fa-bell text-lg"></i>
-                        <span class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-danger text-white text-[10px] font-bold rounded-full flex items-center justify-center" id="notifBadge">3</span>
-                    </button>
+                <div class="min-w-0">
+                    <h2 id="breadcrumb-current" class="text-xl sm:text-2xl font-extrabold tracking-tight text-[#1F2A1C] truncate">Welcome to R&amp;R Garden Center</h2>
+                    <p id="pageSubtitle" class="text-sm text-[#8A9387] mt-0.5 hidden sm:block truncate">Hello Admin, welcome back!</p>
                 </div>
+            </div>
+            <!-- Right: search, shop, bell, user -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <label class="relative hidden md:block">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-[#A3AC9F] text-sm"></i>
+                    <input id="globalSearch" type="text" placeholder="Search products…" onkeydown="if(event.key==='Enter') globalSearch(this.value)"
+                        class="w-56 lg:w-72 bg-white border border-[#EEF1EB] rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition">
+                </label>
+                <a href="shop.html" target="rr-shop" class="icon-btn" title="Open Customer Shop" aria-label="Open Customer Shop">
+                    <i class="fa-solid fa-store"></i>
+                </a>
+                <button class="icon-btn" title="Notifications" aria-label="Notifications" onclick="switchTab('orders', document.querySelector('[data-tab=orders]'))">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-danger text-white text-[10px] font-bold rounded-full flex items-center justify-center" id="notifBadge">3</span>
+                </button>
                 <div class="relative" id="userDropdownContainer">
-                    <button onclick="document.getElementById('userDropdown').classList.toggle('show')" class="flex items-center gap-2 hover:bg-gray-50 rounded-lg px-2 py-1.5 transition">
-                        <div class="w-8 h-8 rounded-full bg-brand text-white flex items-center justify-center text-xs font-bold">AU</div>
-                        <span class="text-sm font-medium text-gray-700 hidden sm:block">Admin User</span>
-                        <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 hidden sm:block"></i>
+                    <button onclick="document.getElementById('userDropdown').classList.toggle('show')" class="flex items-center gap-2 rounded-xl p-0.5 hover:ring-4 hover:ring-brand/10 transition" aria-label="Account menu">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8BC34A] to-[#3D7A1F] text-white flex items-center justify-center text-xs font-bold">AU</div>
                     </button>
                     <div id="userDropdown" class="dropdown-menu mt-2">
+                        <div class="px-4 py-3 border-b border-gray-100">
+                            <p class="text-sm font-semibold">Admin User</p>
+                            <p class="text-xs text-gray-500">admin@rrgardening.com</p>
+                        </div>
                         <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"><i class="fa-solid fa-user w-4 text-center text-gray-400"></i> Profile</a>
                         <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50" onclick="event.preventDefault();switchTab('settings',document.querySelector('[data-tab=settings]'))"><i class="fa-solid fa-gear w-4 text-center text-gray-400"></i> Settings</a>
                         <hr class="my-1 border-gray-100">
@@ -170,65 +188,114 @@
     </header>
 
     <!-- Page Content -->
-    <main class="flex-1 p-4 lg:p-8 overflow-y-auto">
+    <main class="flex-1 px-4 pb-8 pt-2 lg:px-8">
 
 <!-- ========================================== -->
 <!--              DASHBOARD TAB                 -->
 <!-- ========================================== -->
 <div id="tab-dashboard" class="tab-content active">
-    <!-- KPI Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
-        <!-- Revenue -->
-        <div class="card p-5">
-            <div class="flex items-start justify-between">
-                <div>
-                    <p class="text-sm text-gray-500 font-medium">Total Revenue</p>
-                    <p class="text-2xl font-bold mt-1" id="kpiRevenue">$47,832.50</p>
-                    <p class="text-xs text-success font-semibold mt-2 flex items-center gap-1"><i class="fa-solid fa-arrow-up text-[10px]"></i> 12.5% vs last month</p>
+
+    <!-- Hero + Stats (top margin leaves room for the mailbox that rises above the stats card) -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8 mt-8">
+        <!-- Hero banner -->
+        <div class="hero xl:col-span-2 relative overflow-hidden rounded-[22px] p-7 sm:p-9 min-h-[220px] flex flex-col justify-center shadow-[0_18px_40px_-18px_rgba(11,28,16,0.6)]">
+            <img src="assets/hero.jpg" alt="" aria-hidden="true" class="absolute inset-0 w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-r from-[#0B1C10]/95 via-[#0B1C10]/70 to-[#0B1C10]/10 pointer-events-none"></div>
+            <div class="relative max-w-md">
+                <h3 class="text-2xl sm:text-[1.75rem] font-bold leading-tight tracking-tight text-[#9BD15F]">Grow your garden center, online &amp; in store</h3>
+                <p class="text-sm text-white/70 mt-3 leading-relaxed">Inventory, orders and your online shop, all in one place. Everything updates live as customers buy.</p>
+                <div class="flex flex-wrap gap-3 mt-6">
+                    <button onclick="openModal('addProductModal')" class="bg-white text-[#1F2A1C] text-sm font-semibold rounded-xl px-5 py-2.5 hover:bg-[#EEF7E4] transition"><i class="fa-solid fa-plus mr-1.5 text-xs"></i> Add Product</button>
+                    <a href="shop.html" target="rr-shop" class="border border-white/40 text-white text-sm font-semibold rounded-xl px-5 py-2.5 hover:bg-white/10 transition">Open Shop</a>
                 </div>
-                <div class="kpi-icon bg-green-50 text-brand"><i class="fa-solid fa-dollar-sign"></i></div>
             </div>
         </div>
-        <!-- Orders Today -->
-        <div class="card p-5">
-            <div class="flex items-start justify-between">
+
+        <!-- My Stats -->
+        <div class="stats-card relative rounded-[22px] bg-gradient-to-br from-[#D9F0C0] to-[#B7E08D] p-7 min-h-[220px] flex flex-col">
+            <h3 class="text-xl font-bold tracking-tight text-[#1F2A1C]">My Stats</h3>
+            <div class="flex flex-col gap-3 mt-4 relative z-10">
                 <div>
-                    <p class="text-sm text-gray-500 font-medium">Orders Today</p>
-                    <p class="text-2xl font-bold mt-1" id="kpiOrdersToday">23</p>
-                    <p class="text-xs text-success font-semibold mt-2 flex items-center gap-1"><i class="fa-solid fa-arrow-up text-[10px]"></i> 8.3% vs yesterday</p>
+                    <p class="text-xs text-[#3E4A3A] font-medium">Today</p>
+                    <p class="text-lg font-bold text-[#1F2A1C] mt-0.5"><span id="kpiOrdersToday">23</span> Orders</p>
                 </div>
-                <div class="kpi-icon bg-blue-50 text-info"><i class="fa-solid fa-cart-shopping"></i></div>
+                <div>
+                    <p class="text-xs text-[#3E4A3A] font-medium">This Month</p>
+                    <p class="text-lg font-bold text-[#1F2A1C] mt-0.5" id="kpiRevenue">$47,832.50</p>
+                </div>
+            </div>
+            <p class="text-xs font-semibold text-[#2F6A16] mt-2 relative z-10"><i class="fa-solid fa-arrow-trend-up mr-1"></i> 12.5% vs last month</p>
+            <a href="#" onclick="event.preventDefault();switchTab('orders',document.querySelector('[data-tab=orders]'))" class="mt-auto pt-6 text-xs font-semibold text-[#1F2A1C] hover:text-brand relative z-10 inline-flex items-center gap-1.5">Go to my orders <i class="fa-solid fa-arrow-right text-[10px]"></i></a>
+            <!-- Transparent cut-outs (assets/cutouts) overflow the card's top edge like the reference -->
+            <img src="assets/cutouts/mailbox.png" alt="" aria-hidden="true" class="stat-plant absolute right-7 bottom-4 h-[102%] pointer-events-none select-none">
+            <img src="assets/cutouts/rock-bag.png" alt="" aria-hidden="true" class="stat-plant stat-plant-front absolute right-[4.5rem] bottom-3 h-[52%] pointer-events-none select-none">
+        </div>
+    </div>
+
+    <!-- Listings + Recent Activity -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+        <div class="xl:col-span-2 flex flex-col gap-6">
+            <!-- Top Sellers listing -->
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="section-title">Top Sellers</h3>
+                    <a href="#" class="view-all" onclick="event.preventDefault();switchTab('inventory',document.querySelector('[data-tab=inventory]'))">View All <i class="fa-solid fa-chevron-right text-[9px]"></i></a>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5" id="topSellersGrid">
+                    <!-- rendered from shared store -->
+                </div>
+            </div>
+
+            <!-- Customers + Catalog -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-bold text-[#2F6A16]">Customers</h3>
+                        <a href="#" class="view-all" onclick="event.preventDefault();switchTab('customers',document.querySelector('[data-tab=customers]'))">View All <i class="fa-solid fa-chevron-right text-[9px]"></i></a>
+                    </div>
+                    <div class="card p-4 flex items-center gap-4">
+                        <div class="avatar-stack flex" id="customerAvatars"></div>
+                        <div class="w-px self-stretch bg-[#8BC34A]"></div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-[#1F2A1C]"><span id="kpiCustomers">342</span> active</p>
+                            <p class="text-xs text-success font-semibold mt-0.5"><i class="fa-solid fa-arrow-up text-[9px]"></i> 15.2% this month</p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-bold text-[#2F6A16]">Catalog</h3>
+                        <a href="#" class="view-all" onclick="event.preventDefault();switchTab('inventory',document.querySelector('[data-tab=inventory]'))">View All <i class="fa-solid fa-chevron-right text-[9px]"></i></a>
+                    </div>
+                    <div class="card p-4 flex items-center gap-4">
+                        <div class="avatar-stack flex" id="catalogStack"></div>
+                        <div class="w-px self-stretch bg-[#8BC34A]"></div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-[#1F2A1C]"><span id="kpiProducts">30</span> products</p>
+                            <p class="text-xs text-warning font-semibold mt-0.5"><i class="fa-solid fa-triangle-exclamation text-[9px]"></i> <span id="kpiLowStock">4</span> low stock</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <!-- Total Products -->
-        <div class="card p-5">
-            <div class="flex items-start justify-between">
-                <div>
-                    <p class="text-sm text-gray-500 font-medium">Total Products</p>
-                    <p class="text-2xl font-bold mt-1" id="kpiProducts">156</p>
-                    <p class="text-xs text-warning font-semibold mt-2 flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation text-[10px]"></i> <span id="kpiLowStock">4</span> low stock alerts</p>
-                </div>
-                <div class="kpi-icon bg-amber-50 text-warning"><i class="fa-solid fa-boxes-stacked"></i></div>
+
+        <!-- Recent Activity -->
+        <div>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="section-title">Recent Activity</h3>
+                <a href="#" class="view-all" onclick="event.preventDefault();switchTab('orders',document.querySelector('[data-tab=orders]'))">View All <i class="fa-solid fa-chevron-right text-[9px]"></i></a>
             </div>
-        </div>
-        <!-- Active Customers -->
-        <div class="card p-5">
-            <div class="flex items-start justify-between">
-                <div>
-                    <p class="text-sm text-gray-500 font-medium">Active Customers</p>
-                    <p class="text-2xl font-bold mt-1" id="kpiCustomers">342</p>
-                    <p class="text-xs text-success font-semibold mt-2 flex items-center gap-1"><i class="fa-solid fa-arrow-up text-[10px]"></i> 15.2% vs last month</p>
-                </div>
-                <div class="kpi-icon bg-purple-50 text-purple-600"><i class="fa-solid fa-users"></i></div>
-            </div>
+            <ul class="space-y-1" id="recentActivity">
+                <!-- rendered from shared store -->
+            </ul>
         </div>
     </div>
 
     <!-- Revenue Chart + Low Stock -->
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div class="xl:col-span-2 card p-6">
             <div class="flex items-center justify-between mb-6">
-                <h2 class="font-display text-lg font-semibold">Revenue Overview</h2>
+                <h3 class="section-title">Revenue Overview</h3>
                 <select class="input-field w-auto text-xs py-1.5 px-3">
                     <option>Last 6 Months</option>
                     <option>Last 12 Months</option>
@@ -239,86 +306,11 @@
         </div>
         <div class="card p-6">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="font-display text-lg font-semibold">Low Stock Alerts</h2>
-                <span class="badge bg-red-100 text-danger" id="lowStockBadge">4 items</span>
+                <h3 class="section-title">Low Stock Alerts</h3>
+                <span class="badge bg-red-50 text-danger" id="lowStockBadge">4 items</span>
             </div>
             <div class="space-y-3 max-h-[300px] overflow-y-auto pr-1" id="lowStockList">
                 <!-- rendered from shared store -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Top Selling + Recent Orders -->
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <!-- Top Selling Products -->
-        <div class="card p-6">
-            <h2 class="font-display text-lg font-semibold mb-4">Top Selling Products</h2>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="border-b border-gray-100">
-                            <th class="text-left py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</th>
-                            <th class="text-left py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
-                            <th class="text-right py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Units Sold</th>
-                            <th class="text-right py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Revenue</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-b border-gray-50">
-                            <td class="py-3 px-2 font-medium flex items-center gap-2"><span>🪻</span> Lavender (English)</td>
-                            <td class="py-3 px-2 text-gray-500">Perennials</td>
-                            <td class="py-3 px-2 text-right font-semibold">234</td>
-                            <td class="py-3 px-2 text-right font-semibold text-brand">$3,037.66</td>
-                        </tr>
-                        <tr class="border-b border-gray-50">
-                            <td class="py-3 px-2 font-medium flex items-center gap-2"><span>🍃</span> Potting Mix Premium</td>
-                            <td class="py-3 px-2 text-gray-500">Soil & Amendments</td>
-                            <td class="py-3 px-2 text-right font-semibold">189</td>
-                            <td class="py-3 px-2 text-right font-semibold text-brand">$2,456.01</td>
-                        </tr>
-                        <tr class="border-b border-gray-50">
-                            <td class="py-3 px-2 font-medium flex items-center gap-2"><span>🌱</span> Cherry Tomato Starts</td>
-                            <td class="py-3 px-2 text-gray-500">Annuals</td>
-                            <td class="py-3 px-2 text-right font-semibold">178</td>
-                            <td class="py-3 px-2 text-right font-semibold text-brand">$1,246.00</td>
-                        </tr>
-                        <tr class="border-b border-gray-50">
-                            <td class="py-3 px-2 font-medium flex items-center gap-2"><span>🪴</span> Succulent Trio Pack</td>
-                            <td class="py-3 px-2 text-gray-500">Succulents</td>
-                            <td class="py-3 px-2 text-right font-semibold">156</td>
-                            <td class="py-3 px-2 text-right font-semibold text-brand">$3,588.44</td>
-                        </tr>
-                        <tr>
-                            <td class="py-3 px-2 font-medium flex items-center gap-2"><span>🌿</span> Herb Garden Kit</td>
-                            <td class="py-3 px-2 text-gray-500">Herbs</td>
-                            <td class="py-3 px-2 text-right font-semibold">143</td>
-                            <td class="py-3 px-2 text-right font-semibold text-brand">$3,574.57</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Recent Orders -->
-        <div class="card p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="font-display text-lg font-semibold">Recent Orders</h2>
-                <a href="#" class="text-sm text-brand font-medium hover:underline" onclick="event.preventDefault();switchTab('orders',document.querySelector('[data-tab=orders]'))">View All</a>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="border-b border-gray-100">
-                            <th class="text-left py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Order #</th>
-                            <th class="text-left py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer</th>
-                            <th class="text-right py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
-                            <th class="text-center py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="recentOrdersBody">
-                        <!-- rendered from shared store -->
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
@@ -348,16 +340,7 @@
             </div>
             <select id="categoryFilter" class="input-field" onchange="filterInventory()">
                 <option value="">All Categories</option>
-                <option>Annuals</option>
-                <option>Perennials</option>
-                <option>Shrubs & Trees</option>
-                <option>Succulents</option>
-                <option>Herbs</option>
-                <option>Seeds</option>
-                <option>Soil & Amendments</option>
-                <option>Pots & Containers</option>
-                <option>Tools</option>
-                <option>Fertilizers</option>
+                <!-- categories filled from RRStore.getCategories() -->
             </select>
             <select id="stockFilter" class="input-field" onchange="filterInventory()">
                 <option value="">All Stock Status</option>
@@ -478,16 +461,16 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
             <h2 class="font-display text-2xl font-bold">Customers</h2>
-            <p class="text-sm text-gray-500 mt-1">View and manage your customer base</p>
+            <p class="text-sm text-gray-500 mt-1"><span id="customerCount">0</span> customers · click anyone to open their profile</p>
         </div>
-        <button class="btn-primary flex items-center gap-2 self-start"><i class="fa-solid fa-plus"></i> Add Customer</button>
+        <button class="btn-primary flex items-center gap-2 self-start" onclick="openCustomerForm()"><i class="fa-solid fa-plus"></i> Add Customer</button>
     </div>
 
     <!-- Search -->
     <div class="card p-4 mb-6">
         <div class="relative max-w-md">
             <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-            <input type="text" class="input-field pl-9" placeholder="Search customers...">
+            <input type="text" id="customerSearch" class="input-field pl-9" placeholder="Search by name, email, phone or address..." oninput="renderCustomers()">
         </div>
     </div>
 
@@ -506,23 +489,24 @@
                         <th class="text-center py-3 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">SM</div> Sarah Mitchell</div></td><td class="py-3 px-3 text-gray-500">sarah.m@email.com</td><td class="py-3 px-3 text-gray-500">(555) 123-4567</td><td class="py-3 px-3 text-center font-semibold">12</td><td class="py-3 px-3 text-right font-semibold">$1,847.30</td><td class="py-3 px-3 text-gray-500">Oct 26, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
-                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold">JC</div> James Chen</div></td><td class="py-3 px-3 text-gray-500">j.chen@email.com</td><td class="py-3 px-3 text-gray-500">(555) 234-5678</td><td class="py-3 px-3 text-center font-semibold">8</td><td class="py-3 px-3 text-right font-semibold">$1,234.56</td><td class="py-3 px-3 text-gray-500">Oct 25, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
-                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-xs font-bold">MG</div> Maria Garcia</div></td><td class="py-3 px-3 text-gray-500">maria.g@email.com</td><td class="py-3 px-3 text-gray-500">(555) 345-6789</td><td class="py-3 px-3 text-center font-semibold">15</td><td class="py-3 px-3 text-right font-semibold">$2,567.89</td><td class="py-3 px-3 text-gray-500">Oct 24, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
-                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-bold">DT</div> David Thompson</div></td><td class="py-3 px-3 text-gray-500">d.thompson@email.com</td><td class="py-3 px-3 text-gray-500">(555) 456-7890</td><td class="py-3 px-3 text-center font-semibold">5</td><td class="py-3 px-3 text-right font-semibold">$623.45</td><td class="py-3 px-3 text-gray-500">Oct 23, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
-                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-xs font-bold">ER</div> Emily Rodriguez</div></td><td class="py-3 px-3 text-gray-500">emily.r@email.com</td><td class="py-3 px-3 text-gray-500">(555) 567-8901</td><td class="py-3 px-3 text-center font-semibold">22</td><td class="py-3 px-3 text-right font-semibold">$4,123.67</td><td class="py-3 px-3 text-gray-500">Oct 22, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
-                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-xs font-bold">RK</div> Robert Kim</div></td><td class="py-3 px-3 text-gray-500">r.kim@email.com</td><td class="py-3 px-3 text-gray-500">(555) 678-9012</td><td class="py-3 px-3 text-center font-semibold">9</td><td class="py-3 px-3 text-right font-semibold">$1,456.78</td><td class="py-3 px-3 text-gray-500">Oct 21, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
-                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">LW</div> Lisa Wang</div></td><td class="py-3 px-3 text-gray-500">l.wang@email.com</td><td class="py-3 px-3 text-gray-500">(555) 789-0123</td><td class="py-3 px-3 text-center font-semibold">18</td><td class="py-3 px-3 text-right font-semibold">$3,890.12</td><td class="py-3 px-3 text-gray-500">Oct 20, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
-                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center text-xs font-bold">MP</div> Michael Patel</div></td><td class="py-3 px-3 text-gray-500">m.patel@email.com</td><td class="py-3 px-3 text-gray-500">(555) 890-1234</td><td class="py-3 px-3 text-center font-semibold">3</td><td class="py-3 px-3 text-right font-semibold">$234.56</td><td class="py-3 px-3 text-gray-500">Oct 18, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
-                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">AJ</div> Amanda Johnson</div></td><td class="py-3 px-3 text-gray-500">a.johnson@email.com</td><td class="py-3 px-3 text-gray-500">(555) 901-2345</td><td class="py-3 px-3 text-center font-semibold">14</td><td class="py-3 px-3 text-right font-semibold">$2,678.90</td><td class="py-3 px-3 text-gray-500">Oct 17, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
-                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center text-xs font-bold">CB</div> Chris Brown</div></td><td class="py-3 px-3 text-gray-500">c.brown@email.com</td><td class="py-3 px-3 text-gray-500">(555) 012-3456</td><td class="py-3 px-3 text-center font-semibold">7</td><td class="py-3 px-3 text-right font-semibold">$987.65</td><td class="py-3 px-3 text-gray-500">Oct 15, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
-                    <tr class="border-b border-gray-50"><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-lime-100 text-lime-600 flex items-center justify-center text-xs font-bold">NL</div> Nancy Liu</div></td><td class="py-3 px-3 text-gray-500">n.liu@email.com</td><td class="py-3 px-3 text-gray-500">(555) 321-6540</td><td class="py-3 px-3 text-center font-semibold">11</td><td class="py-3 px-3 text-right font-semibold">$2,145.30</td><td class="py-3 px-3 text-gray-500">Oct 14, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
-                    <tr><td class="py-3 px-4 font-medium"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center text-xs font-bold">TW</div> Tom Wilson</div></td><td class="py-3 px-3 text-gray-500">t.wilson@email.com</td><td class="py-3 px-3 text-gray-500">(555) 654-3210</td><td class="py-3 px-3 text-center font-semibold">6</td><td class="py-3 px-3 text-right font-semibold">$876.40</td><td class="py-3 px-3 text-gray-500">Oct 12, 2026</td><td class="py-3 px-3 text-center"><button class="text-gray-400 hover:text-brand"><i class="fa-solid fa-eye"></i></button> <button class="text-gray-400 hover:text-brand ml-2"><i class="fa-solid fa-pen-to-square"></i></button></td></tr>
-                </tbody>
+                <tbody id="customersBody"><!-- rendered from shared store --></tbody>
             </table>
         </div>
     </div>
+</div>
+
+<!-- ========================================== -->
+<!--         PRODUCT PROFILE (from Inventory)   -->
+<!-- ========================================== -->
+<div id="tab-product" class="tab-content">
+    <div id="productProfile"><!-- rendered by renderProductProfile() --></div>
+</div>
+
+<!-- ========================================== -->
+<!--        CUSTOMER PROFILE (from Customers)   -->
+<!-- ========================================== -->
+<div id="tab-customer" class="tab-content">
+    <div id="customerProfile"><!-- rendered by renderCustomerProfile() --></div>
 </div>
 
 <!-- ========================================== -->
@@ -783,7 +767,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Store Name</label>
-                        <input type="text" class="input-field" value="R&R Gardening">
+                        <input type="text" class="input-field" value="R&R Garden Center">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -914,7 +898,7 @@
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
-                    <input name="name" type="text" class="input-field" placeholder="e.g., Lavender (English)" required>
+                    <input name="name" type="text" class="input-field" placeholder="e.g., River Rock (per yard)" required>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -923,18 +907,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                        <select name="category" class="input-field">
-                            <option>Annuals</option>
-                            <option>Perennials</option>
-                            <option>Shrubs & Trees</option>
-                            <option>Succulents</option>
-                            <option>Herbs</option>
-                            <option>Seeds</option>
-                            <option>Soil & Amendments</option>
-                            <option>Pots & Containers</option>
-                            <option>Tools</option>
-                            <option>Fertilizers</option>
-                        </select>
+                        <select name="category" class="input-field"><!-- filled from RRStore.getCategories() -->                        </select>
                     </div>
                 </div>
                 <div>
@@ -956,8 +929,12 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                    <input type="url" class="input-field" placeholder="https://...">
+                    <span class="block text-sm font-medium text-gray-700 mb-1">Product photo</span>
+                    <label class="flex items-center gap-4 p-3 border border-dashed border-[#C9D3C2] rounded-xl cursor-pointer hover:border-brand hover:bg-[#F6F8F4] transition">
+                        <span id="newPhotoPreview" class="w-16 h-16 rounded-lg bg-[#F3F3F0] flex items-center justify-center text-[#A3AC9F] overflow-hidden flex-shrink-0"><i class="fa-solid fa-camera text-lg"></i></span>
+                        <span class="text-sm text-[#4B5548]"><span class="font-semibold text-brand">Upload a photo</span><br><span class="text-xs text-[#8A9387]">JPG, PNG or WebP; shown in the shop</span></span>
+                        <input name="photo" type="file" accept="image/*" class="sr-only" onchange="previewNewPhoto(this.files[0])">
+                    </label>
                 </div>
             </div>
             <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
@@ -984,6 +961,50 @@
     </div>
 </div>
 
+<!-- ========================================== -->
+<!--         ADD / EDIT CUSTOMER MODAL          -->
+<!-- ========================================== -->
+<div id="customerFormModal" class="fixed inset-0 z-50 hidden">
+    <div class="modal-overlay absolute inset-0 bg-black/50" onclick="closeModal('customerFormModal')"></div>
+    <div class="modal-panel absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-lg bg-white rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-5">
+            <h3 class="font-display text-xl font-bold" id="customerFormTitle">Add Customer</h3>
+            <button onclick="closeModal('customerFormModal')" class="text-gray-400 hover:text-gray-600 text-xl" aria-label="Close">&times;</button>
+        </div>
+        <form id="customerForm" onsubmit="event.preventDefault(); saveCustomerForm(this);">
+            <input type="hidden" name="id">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Full name</label>
+                    <input name="name" type="text" class="input-field" required>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input name="email" type="email" class="input-field" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                        <input name="phone" type="tel" class="input-field" placeholder="(503) 555-0100">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                    <input name="address" type="text" class="input-field" placeholder="Street, City, State ZIP">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                    <textarea name="notes" class="input-field" rows="3" placeholder="Preferences, follow-ups…"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+                <button type="button" class="btn-outline" onclick="closeModal('customerFormModal')">Cancel</button>
+                <button type="submit" class="btn-primary">Save Customer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div id="toastContainer" class="fixed bottom-6 right-6 z-[90] flex flex-col gap-2 items-end pointer-events-none"></div>
 
 <!-- ============================= JAVASCRIPT ============================= -->
@@ -993,16 +1014,31 @@ function switchTab(tabId, el) {
     event && event.preventDefault();
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.getElementById('tab-' + tabId).classList.add('active');
-    document.querySelectorAll('.sidebar-link').forEach(l => { l.classList.remove('active'); l.classList.add('text-gray-300'); });
-    if (el) { el.classList.add('active'); el.classList.remove('text-gray-300'); }
-    const labels = { dashboard:'Dashboard', inventory:'Inventory', orders:'Orders', customers:'Customers', reports:'Reports & Analytics', integrations:'Integrations', settings:'Settings' };
-    document.getElementById('breadcrumb-current').textContent = labels[tabId] || tabId;
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    if (el) el.classList.add('active');
+    const labels = {
+        dashboard:    ['Welcome to R&R Garden Center', 'Hello Admin, welcome back!'],
+        inventory:    ['Inventory', 'Products, materials and stock levels'],
+        orders:       ['Orders', 'In-store and online orders'],
+        customers:    ['Customers', 'The people who shop with you'],
+        reports:      ['Reports & Analytics', 'How the business is growing'],
+        integrations: ['Integrations', 'Connected apps and services'],
+        settings:     ['Settings', 'Store preferences and configuration'],
+        product:      ['Product Profile', 'Stock, pricing and order history'],
+        customer:     ['Customer Profile', 'Contact details and purchase history'],
+    };
+    const [title, subtitle] = labels[tabId] || [tabId, ''];
+    document.getElementById('breadcrumb-current').textContent = title;
+    document.getElementById('pageSubtitle').textContent = subtitle;
     // Close mobile sidebar
     document.getElementById('sidebar').classList.add('-translate-x-full');
     document.getElementById('sidebarOverlay').classList.add('hidden');
     // Initialize charts if needed
     if (tabId === 'dashboard') initDashboardCharts();
     if (tabId === 'reports') initReportCharts();
+    if (tabId === 'product') renderProductProfile();
+    if (tabId === 'customer') renderCustomerProfile();
+    if (tabId === 'customers') renderCustomers();
 }
 
 function toggleSidebar() {
@@ -1010,6 +1046,13 @@ function toggleSidebar() {
     const ov = document.getElementById('sidebarOverlay');
     sb.classList.toggle('-translate-x-full');
     ov.classList.toggle('hidden');
+}
+
+// Header search jumps to Inventory with the query applied
+function globalSearch(q) {
+    switchTab('inventory', document.querySelector('[data-tab=inventory]'));
+    document.getElementById('inventorySearch').value = q.trim();
+    filterInventory();
 }
 
 function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
@@ -1042,18 +1085,18 @@ function renderInventory() {
     const page = filteredProducts.slice(start, start + perPage);
     body.innerHTML = page.map(p => {
         const s = getStockStatus(p.stock);
-        return `<tr class="border-b border-gray-50">
-            <td class="py-3 px-4"><input type="checkbox" class="rounded"></td>
-            <td class="py-3 px-3 font-medium"><div class="flex items-center gap-2"><span class="text-xl">${p.emoji}</span> ${p.name}</div></td>
+        return `<tr class="border-b border-gray-50 cursor-pointer" onclick="openProduct(${p.id})">
+            <td class="py-3 px-4" onclick="event.stopPropagation()"><input type="checkbox" class="rounded" aria-label="Select ${RRStore.esc(p.name)}"></td>
+            <td class="py-3 px-3 font-medium"><div class="flex items-center gap-3">${productThumb(p, 'w-10 h-10 rounded-lg', 'text-xl')} ${p.name}</div></td>
             <td class="py-3 px-3 text-gray-500 font-mono text-xs">${p.sku}</td>
             <td class="py-3 px-3 text-gray-500">${p.category}</td>
-            <td class="py-3 px-3 text-right font-semibold">$${p.price.toFixed(2)}</td>
+            <td class="py-3 px-3 text-right whitespace-nowrap"><span class="font-semibold">$${p.price.toFixed(2)}</span>${p.unit && p.unit !== 'each' ? `<span class="block text-[11px] text-gray-400">${unitLabel(p)}</span>` : ''}${p.priceTBD ? '<span class="block text-[10px] font-semibold text-amber-700">to confirm</span>' : ''}</td>
             <td class="py-3 px-3 text-right text-gray-500">$${p.cost.toFixed(2)}</td>
             <td class="py-3 px-3 text-right font-semibold">${p.stock}</td>
             <td class="py-3 px-3 text-center"><span class="badge ${s.class}">${s.label}</span></td>
             <td class="py-3 px-3 text-center">
-                <button class="text-gray-400 hover:text-brand mr-1"><i class="fa-solid fa-pen-to-square"></i></button>
-                <button class="text-gray-400 hover:text-danger"><i class="fa-solid fa-trash"></i></button>
+                <button class="text-gray-400 hover:text-brand mr-1" aria-label="Open product"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button class="text-gray-400 hover:text-danger" aria-label="Delete product" onclick="event.stopPropagation()"><i class="fa-solid fa-trash"></i></button>
             </td>
         </tr>`;
     }).join('');
@@ -1157,7 +1200,7 @@ function showOrderDetail(orderId) {
         <div class="grid grid-cols-2 gap-6 mb-6">
             <div>
                 <h4 class="text-sm font-semibold text-gray-500 uppercase mb-2">Customer</h4>
-                <p class="font-medium">${RRStore.esc(o.customer)}</p>
+                <p class="font-medium">${customerLink(o)}</p>
                 <p class="text-sm text-gray-500">${RRStore.esc(o.email)}</p>
                 ${o.phone ? `<p class="text-sm text-gray-500">${RRStore.esc(o.phone)}</p>` : ''}
                 <p class="text-sm text-gray-500">${RRStore.esc(o.address)}</p>
@@ -1180,7 +1223,7 @@ function showOrderDetail(orderId) {
             </tr></thead>
             <tbody>
                 ${o.products.map(p => `<tr class="border-b border-gray-50">
-                    <td class="py-2 font-medium">${p.name}</td>
+                    <td class="py-2 font-medium">${productLink(p.name)}</td>
                     <td class="py-2 text-center">${p.qty}</td>
                     <td class="py-2 text-right">$${p.price.toFixed(2)}</td>
                     <td class="py-2 text-right font-semibold">$${(p.qty*p.price).toFixed(2)}</td>
@@ -1213,7 +1256,463 @@ function refreshFromStore() {
     filterInventory();                       // re-applies search/filters/sort and renders
     goToPage(keepPage);
     renderOrders();
+    fillCategorySelects();
     renderDashboardLive();
+    renderCustomers();
+    if (currentProductId != null && document.getElementById('tab-product').classList.contains('active')) renderProductProfile();
+    if (currentCustomerId && document.getElementById('tab-customer').classList.contains('active')) renderCustomerProfile();
+}
+
+// ── Product & customer profiles ──
+// Order lines reference products by name; customers are keyed by their original (lowercased) email.
+const custIdFor = o => String(o.email || o.customer).toLowerCase();
+const productByName = name => inventoryProducts.find(p => p.name === name);
+const shortDate = d => String(d).replace(/, \d{4}$/, '');
+function fmtStamp(ts) {
+    return new Date(ts).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+function statTile(label, value, sub) {
+    return `<div class="card p-4"><p class="text-xs text-[#8A9387] font-medium">${label}</p>
+        <p class="text-xl font-bold text-[#1F2A1C] mt-1">${value}</p>${sub ? `<p class="text-[11px] text-[#8A9387] mt-0.5">${sub}</p>` : ''}</div>`;
+}
+const backLink = (tab, label) => `<a href="#" class="view-all text-sm mb-5" onclick="event.preventDefault();switchTab('${tab}',document.querySelector('[data-tab=${tab}]'))"><i class="fa-solid fa-arrow-left text-[10px]"></i> ${label}</a>`;
+const customerLink = (o, cls = '') => `<a href="#" class="${cls} hover:text-brand hover:underline" onclick="event.preventDefault();event.stopPropagation();closeModal('orderDetailModal');openCustomer(${RRStore.esc(JSON.stringify(custIdFor(o)))})">${RRStore.esc(o.customer)}</a>`;
+function productLink(name, cls = '') {
+    const p = productByName(name);
+    return p ? `<a href="#" class="${cls} hover:text-brand hover:underline" onclick="event.preventDefault();event.stopPropagation();closeModal('orderDetailModal');openProduct(${p.id})">${RRStore.esc(name)}</a>` : RRStore.esc(name);
+}
+
+let currentProductId = null;
+function openProduct(id) {
+    currentProductId = id;
+    switchTab('product', document.querySelector('[data-tab=inventory]'));
+    window.scrollTo(0, 0);
+}
+
+function renderProductProfile() {
+    const el = document.getElementById('productProfile');
+    const p = inventoryProducts.find(x => x.id === currentProductId);
+    if (!p) { el.innerHTML = backLink('inventory', 'Back to Inventory') + '<p class="text-sm text-gray-500">Product not found.</p>'; return; }
+    const s = getStockStatus(p.stock);
+    const lines = [];
+    ordersData.forEach(o => o.products.forEach(l => { if (l.name === p.name) lines.push({ o, qty: l.qty, price: l.price }); }));
+    const sold = lines.filter(x => x.o.status !== 'Cancelled');
+    const units = sold.reduce((n, x) => n + x.qty, 0);
+    const revenue = sold.reduce((n, x) => n + x.qty * x.price, 0);
+    const buyers = new Set(sold.map(x => custIdFor(x.o))).size;
+    const margin = p.price ? Math.round((1 - p.cost / p.price) * 100) : 0;
+    const log = p.stockLog || [];
+
+    el.innerHTML = `
+    ${backLink('inventory', 'Back to Inventory')}
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+        <div class="card p-6 xl:col-span-2 flex flex-col sm:flex-row gap-6">
+            <div class="relative group w-full sm:w-52 flex-shrink-0 self-start" ondragover="event.preventDefault();this.classList.add('ring-4','ring-brand/30')" ondragleave="this.classList.remove('ring-4','ring-brand/30')" ondrop="event.preventDefault();this.classList.remove('ring-4','ring-brand/30');uploadProductPhoto(event.dataTransfer.files[0])">
+                ${productThumb(p, 'w-full aspect-square rounded-2xl', 'text-7xl')}
+                <div class="absolute inset-x-3 bottom-3 flex gap-2">
+                    <label class="flex-1 cursor-pointer text-center bg-white/95 hover:bg-white text-[#1F2A1C] text-xs font-semibold rounded-xl py-2 shadow-sm transition"><i class="fa-solid fa-camera mr-1"></i> ${p.image && String(p.image).startsWith('data:') ? 'Change photo' : 'Upload photo'}
+                        <input type="file" accept="image/*" class="sr-only" onchange="uploadProductPhoto(this.files[0])"></label>
+                    ${p.image && String(p.image).startsWith('data:') ? '<button class="bg-white/95 hover:bg-white text-[#4B5548] hover:text-danger text-xs font-semibold rounded-xl px-3 py-2 shadow-sm transition" title="Remove uploaded photo" aria-label="Remove uploaded photo" onclick="resetProductPhoto()"><i class="fa-solid fa-rotate-left"></i></button>' : ''}
+                </div>
+            </div>
+            <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2 mb-2">
+                    <span class="badge bg-brand-pale text-brand">${RRStore.esc(p.category)}</span>
+                    <span class="badge ${s.class}">${s.label}</span>
+                    ${tbdBadge(p)}
+                </div>
+                <h2 class="text-2xl font-bold tracking-tight text-[#1F2A1C]">${RRStore.esc(p.name)}</h2>
+                <p class="text-xs text-[#8A9387] font-mono mt-1">SKU ${RRStore.esc(p.sku)}</p>
+                <p class="text-sm text-[#4B5548] mt-3 leading-relaxed">${RRStore.esc(p.desc || 'No description yet.')}</p>
+                <form class="mt-5 rounded-2xl bg-[#F6F8F4] p-4 max-w-md" onsubmit="event.preventDefault(); saveProductPrice(this);">
+                    <label for="priceInput" class="block text-xs font-semibold text-[#4B5548] mb-1.5">Selling price${unitLabel(p) ? ` <span class="font-normal text-[#8A9387]">(${unitLabel(p)})</span>` : ''}</label>
+                    <div class="flex gap-2">
+                        <div class="relative flex-1">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A9387] font-semibold">$</span>
+                            <input id="priceInput" name="price" type="number" step="0.01" min="0" value="${p.price.toFixed(2)}" required class="input-field pl-7 text-lg font-bold" oninput="previewMargin(this.value, ${p.cost})">
+                        </div>
+                        <button type="submit" class="btn-primary whitespace-nowrap">Update price</button>
+                    </div>
+                    ${p.priceTBD ? '<p class="text-xs text-amber-700 mt-2"><i class="fa-solid fa-circle-info mr-1"></i>This is a placeholder price. Saving a price marks it confirmed.</p>' : ''}
+                    <p class="text-xs text-[#8A9387] mt-2">Cost ${RRStore.money(p.cost)} · Margin <span id="marginPreview" class="font-semibold text-success">${margin}%</span></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Update inventory -->
+        <div class="card p-6">
+            <h3 class="section-title">Update Inventory</h3>
+            <div class="flex items-end gap-2 mt-4">
+                <p class="text-4xl font-extrabold tracking-tight text-[#1F2A1C]">${p.stock}</p>
+                <p class="text-sm text-[#8A9387] pb-1">${p.unit === 'bag' ? 'bags' : p.unit === 'yard' ? 'yards' : p.unit === 'half yard' ? 'half yards' : ''} in stock</p>
+            </div>
+            <form class="mt-5 space-y-3" onsubmit="event.preventDefault(); submitStockAdjust(this);">
+                <div class="grid grid-cols-3 gap-1 p-1 bg-[#F3F6F0] rounded-xl text-xs font-semibold" role="radiogroup" aria-label="Adjustment type">
+                    ${[['add', 'Add'], ['remove', 'Remove'], ['set', 'Set count']].map(([v, l], i) => `
+                    <label class="cursor-pointer"><input type="radio" name="mode" value="${v}" class="peer sr-only" ${i === 0 ? 'checked' : ''}>
+                        <span class="block text-center py-2 rounded-lg text-[#6B7568] peer-checked:bg-white peer-checked:text-brand peer-checked:shadow-sm transition">${l}</span></label>`).join('')}
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-xs font-medium text-gray-600 mb-1">Quantity</label>
+                        <input name="qty" type="number" min="0" step="1" class="input-field" placeholder="0" required></div>
+                    <div><label class="block text-xs font-medium text-gray-600 mb-1">Reason</label>
+                        <select name="reason" class="input-field">
+                            <option>Shipment received</option><option>Stock count</option><option>Damaged / broken</option><option>Returned by customer</option><option>In-store sale</option><option>Other</option>
+                        </select></div>
+                </div>
+                <button type="submit" class="btn-primary w-full">Update stock</button>
+            </form>
+            <p class="text-[11px] text-[#8A9387] mt-3">Changes show up in the online shop right away.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        ${statTile('Units sold', units.toLocaleString(), 'excludes cancelled orders')}
+        ${statTile('Revenue', RRStore.money(revenue))}
+        ${statTile('Orders', new Set(sold.map(x => x.o.id)).size)}
+        ${statTile('Customers', buyers)}
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="card p-6 xl:col-span-2">
+            <h3 class="section-title mb-4">Orders for this product</h3>
+            ${lines.length ? `<div class="overflow-x-auto"><table class="w-full text-sm">
+                <thead><tr class="border-b border-gray-100">
+                    <th class="text-left py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Order</th>
+                    <th class="text-left py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="text-left py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer</th>
+                    <th class="text-center py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Qty</th>
+                    <th class="text-right py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
+                    <th class="text-center py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                </tr></thead>
+                <tbody>${lines.map(x => `<tr class="border-b border-gray-50 cursor-pointer" onclick="showOrderDetail('${x.o.id}')">
+                    <td class="py-3 px-2 font-medium text-brand">#${x.o.id}</td>
+                    <td class="py-3 px-2 text-gray-500 whitespace-nowrap">${x.o.date}</td>
+                    <td class="py-3 px-2"><div class="flex items-center gap-2">${avatarFor(x.o.customer)}${customerLink(x.o, 'font-medium')}</div></td>
+                    <td class="py-3 px-2 text-center font-semibold">${x.qty}</td>
+                    <td class="py-3 px-2 text-right font-semibold">${RRStore.money(x.qty * x.price)}</td>
+                    <td class="py-3 px-2 text-center">${getStatusBadge(x.o.status)}</td>
+                </tr>`).join('')}</tbody></table></div>`
+            : '<p class="text-sm text-[#8A9387] py-8 text-center">No orders for this product yet.</p>'}
+        </div>
+
+        <div class="flex flex-col gap-6">
+            <div class="card p-6">
+                <h3 class="section-title mb-4">Stock History</h3>
+                ${log.length ? `<ul class="space-y-3">${log.slice(0, 8).map(e => `
+                    <li class="flex items-center justify-between gap-3 text-sm">
+                        <div class="min-w-0"><p class="font-medium text-[#1F2A1C] truncate">${RRStore.esc(e.reason)}</p><p class="text-[11px] text-[#8A9387]">${fmtStamp(e.ts)} · now ${e.stock}</p></div>
+                        <span class="font-bold ${e.change >= 0 ? 'text-success' : 'text-danger'}">${e.change >= 0 ? '+' : ''}${e.change}</span>
+                    </li>`).join('')}</ul>`
+                : '<p class="text-sm text-[#8A9387]">No manual stock changes yet. Updates you make here are logged with a reason.</p>'}
+            </div>
+            <div class="card p-6">
+                <h3 class="section-title mb-4">Cost &amp; Description</h3>
+                <form class="space-y-3" onsubmit="event.preventDefault(); saveProductDetails(this);">
+                    <div><label class="block text-xs font-medium text-gray-600 mb-1">Unit cost ($)</label><input name="cost" type="number" step="0.01" min="0" class="input-field" value="${p.cost}"></div>
+                    <div><label class="block text-xs font-medium text-gray-600 mb-1">Description</label><textarea name="desc" rows="3" class="input-field">${RRStore.esc(p.desc || '')}</textarea></div>
+                    <button type="submit" class="btn-outline w-full">Save details</button>
+                </form>
+            </div>
+        </div>
+    </div>`;
+}
+
+function submitStockAdjust(form) {
+    const p = inventoryProducts.find(x => x.id === currentProductId);
+    const fd = new FormData(form);
+    const qty = parseInt(fd.get('qty'), 10);
+    if (!p || isNaN(qty) || qty < 0) return;
+    const mode = fd.get('mode');
+    const delta = mode === 'add' ? qty : mode === 'remove' ? -qty : qty - p.stock;
+    if (!delta) { showToast('Stock is already ' + p.stock); return; }
+    const updated = RRStore.adjustStock(p.id, delta, fd.get('reason'));
+    showToast('<i class="fa-solid fa-boxes-stacked mr-1"></i> ' + RRStore.esc(p.name) + ': ' + (delta > 0 ? '+' : '') + delta + ' → ' + updated.stock + ' in stock');
+}
+
+function saveProductDetails(form) {
+    const fd = new FormData(form);
+    const p = RRStore.updateProduct(currentProductId, {
+        cost: parseFloat(fd.get('cost')) || 0,
+        desc: (fd.get('desc') || '').trim(),
+    });
+    if (p) showToast('<i class="fa-solid fa-circle-check mr-1"></i> ' + RRStore.esc(p.name) + ' updated');
+}
+
+function previewMargin(price, cost) {
+    const v = parseFloat(price);
+    const el = document.getElementById('marginPreview');
+    if (!el) return;
+    const m = v > 0 ? Math.round((1 - cost / v) * 100) : 0;
+    el.textContent = m + '%';
+    el.className = 'font-semibold ' + (m < 0 ? 'text-danger' : m < 30 ? 'text-warning' : 'text-success');
+}
+
+function saveProductPrice(form) {
+    const before = inventoryProducts.find(x => x.id === currentProductId);
+    const price = Math.round((parseFloat(form.elements.price.value) || 0) * 100) / 100;
+    if (!before || (price === before.price && !before.priceTBD)) return;
+    const p = RRStore.updateProduct(currentProductId, { price, priceTBD: false });
+    showToast('<i class="fa-solid fa-tag mr-1"></i> ' + RRStore.esc(p.name) + ': ' + RRStore.money(before.price) + ' → ' + RRStore.money(price) + ' (live in the shop)');
+}
+
+// Uploaded photos are downscaled to a JPEG data URL and stored on the product, so the shop shows them too
+function readImageFile(file, done) {
+    if (!file || !/^image\//.test(file.type)) { showToast('Please choose an image file (JPG, PNG, WebP…)'); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+            const scale = Math.min(1, 800 / Math.max(img.width, img.height));
+            const c = document.createElement('canvas');
+            c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#F3F3F0';          // studio backdrop behind transparent PNGs
+            ctx.fillRect(0, 0, c.width, c.height);
+            ctx.drawImage(img, 0, 0, c.width, c.height);
+            done(c.toDataURL('image/jpeg', 0.82));
+        };
+        img.onerror = () => showToast('That image could not be read');
+        img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function uploadProductPhoto(file) {
+    const id = currentProductId;
+    readImageFile(file, dataUrl => {
+        const p = RRStore.updateProduct(id, { image: dataUrl });
+        const saved = RRStore.getProducts().find(x => x.id === id);
+        if (!saved || saved.image !== dataUrl) { showToast('Photo could not be saved: browser storage is full'); return; }
+        showToast('<i class="fa-solid fa-camera mr-1"></i> New photo for ' + RRStore.esc(p.name) + ' (live in the shop)');
+    });
+}
+
+function resetProductPhoto() {
+    const p = RRStore.updateProduct(currentProductId, { image: null });
+    if (p) showToast('Photo reset for ' + RRStore.esc(p.name));
+}
+
+// ── Customers ──
+function customerSummary(c) {
+    const orders = RRStore.customerOrders(c.id);
+    const valid = orders.filter(o => o.status !== 'Cancelled');
+    const spent = valid.reduce((n, o) => n + o.total, 0);
+    return { orders, valid, spent, last: orders[0] || null };
+}
+
+function renderCustomers() {
+    const body = document.getElementById('customersBody');
+    if (!body) return;
+    const q = (document.getElementById('customerSearch').value || '').toLowerCase();
+    const rows = RRStore.getCustomers()
+        .filter(c => !q || [c.name, c.email, c.phone, c.address].some(v => String(v || '').toLowerCase().includes(q)))
+        .map(c => Object.assign({ c }, customerSummary(c)))
+        .sort((a, b) => b.spent - a.spent);
+    document.getElementById('customerCount').textContent = rows.length;
+    body.innerHTML = rows.length ? rows.map(({ c, orders, spent, last }) => `
+        <tr class="border-b border-gray-50 cursor-pointer" onclick="openCustomer(${RRStore.esc(JSON.stringify(c.id))})">
+            <td class="py-3 px-4 font-medium"><div class="flex items-center gap-3">${avatarFor(c.name)} ${RRStore.esc(c.name)}</div></td>
+            <td class="py-3 px-3 text-gray-500">${RRStore.esc(c.email)}</td>
+            <td class="py-3 px-3 text-gray-500 whitespace-nowrap">${RRStore.esc(c.phone || '—')}</td>
+            <td class="py-3 px-3 text-center font-semibold">${orders.length}</td>
+            <td class="py-3 px-3 text-right font-semibold">${RRStore.money(spent)}</td>
+            <td class="py-3 px-3 text-gray-500 whitespace-nowrap">${last ? last.date : '—'}</td>
+            <td class="py-3 px-3 text-center whitespace-nowrap">
+                <button class="text-gray-400 hover:text-brand" aria-label="View profile"><i class="fa-solid fa-eye"></i></button>
+                <button class="text-gray-400 hover:text-brand ml-2" aria-label="Edit customer" onclick="event.stopPropagation();openCustomerForm(${RRStore.esc(JSON.stringify(c.id))})"><i class="fa-solid fa-pen-to-square"></i></button>
+            </td>
+        </tr>`).join('')
+        : '<tr><td colspan="7" class="py-10 text-center text-sm text-gray-500">No customers match your search.</td></tr>';
+}
+
+let currentCustomerId = null;
+function openCustomer(id) {
+    currentCustomerId = id;
+    switchTab('customer', document.querySelector('[data-tab=customers]'));
+    window.scrollTo(0, 0);
+}
+
+function renderCustomerProfile() {
+    const el = document.getElementById('customerProfile');
+    const c = RRStore.getCustomer(currentCustomerId);
+    if (!c) { el.innerHTML = backLink('customers', 'Back to Customers') + '<p class="text-sm text-gray-500">Customer not found.</p>'; return; }
+    const { orders, valid, spent, last } = customerSummary(c);
+    const top = {};
+    valid.forEach(o => o.products.forEach(l => {
+        const t = top[l.name] || (top[l.name] = { name: l.name, qty: 0, spent: 0 });
+        t.qty += l.qty; t.spent += l.qty * l.price;
+    }));
+    const topList = Object.values(top).sort((a, b) => b.qty - a.qty || b.spent - a.spent).slice(0, 5);
+    const tags = [];
+    if (spent >= 250) tags.push('<span class="badge bg-amber-50 text-amber-700"><i class="fa-solid fa-star text-[9px] mr-1"></i>VIP</span>');
+    if (valid.length >= 2) tags.push('<span class="badge bg-brand-pale text-brand">Repeat customer</span>');
+    if (orders.some(o => o.source === 'online')) tags.push('<span class="badge bg-blue-50 text-info">Shops online</span>');
+    const idArg = RRStore.esc(JSON.stringify(c.id));
+    const info = (icon, label, value, href) => `
+        <div class="flex gap-3"><span class="w-9 h-9 rounded-xl bg-brand-pale text-brand flex items-center justify-center flex-shrink-0"><i class="fa-solid ${icon} text-sm"></i></span>
+        <div class="min-w-0"><p class="text-[11px] text-[#8A9387] uppercase tracking-wider font-semibold">${label}</p>
+        ${value ? (href ? `<a href="${href}" class="text-sm font-medium text-[#1F2A1C] hover:text-brand break-words">${RRStore.esc(value)}</a>` : `<p class="text-sm font-medium text-[#1F2A1C] break-words">${RRStore.esc(value)}</p>`) : '<p class="text-sm text-[#A3AC9F]">Not provided</p>'}</div></div>`;
+
+    el.innerHTML = `
+    ${backLink('customers', 'Back to Customers')}
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+        <div class="card p-6 xl:col-span-2">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-5">
+                ${avatarFor(c.name, 80)}
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-2xl font-bold tracking-tight text-[#1F2A1C]">${RRStore.esc(c.name)}</h2>
+                    <p class="text-sm text-[#8A9387] mt-0.5">Customer since ${RRStore.esc(c.since || '—')}</p>
+                    <div class="flex flex-wrap gap-2 mt-2">${tags.join('')}</div>
+                </div>
+                <div class="flex gap-2 flex-shrink-0">
+                    ${c.email ? `<a href="mailto:${RRStore.esc(c.email)}" class="icon-btn" title="Email" aria-label="Email customer"><i class="fa-regular fa-envelope"></i></a>` : ''}
+                    ${c.phone ? `<a href="tel:${RRStore.esc(c.phone.replace(/[^\d+]/g, ''))}" class="icon-btn" title="Call" aria-label="Call customer"><i class="fa-solid fa-phone"></i></a>` : ''}
+                    <button class="btn-primary" onclick="openCustomerForm(${idArg})"><i class="fa-solid fa-pen mr-1.5 text-xs"></i> Edit</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                <div class="rounded-xl bg-[#F6F8F4] p-4"><p class="text-xs text-[#8A9387]">Orders</p><p class="text-xl font-bold mt-1">${orders.length}</p></div>
+                <div class="rounded-xl bg-[#F6F8F4] p-4"><p class="text-xs text-[#8A9387]">Total spent</p><p class="text-xl font-bold mt-1">${RRStore.money(spent)}</p></div>
+                <div class="rounded-xl bg-[#F6F8F4] p-4"><p class="text-xs text-[#8A9387]">Avg. order</p><p class="text-xl font-bold mt-1">${RRStore.money(valid.length ? spent / valid.length : 0)}</p></div>
+                <div class="rounded-xl bg-[#F6F8F4] p-4"><p class="text-xs text-[#8A9387]">Last order</p><p class="text-xl font-bold mt-1">${last ? shortDate(last.date) : '—'}</p></div>
+            </div>
+        </div>
+
+        <div class="card p-6">
+            <h3 class="section-title mb-5">Contact Details</h3>
+            <div class="space-y-4">
+                ${info('fa-envelope', 'Email', c.email, c.email ? 'mailto:' + c.email : '')}
+                ${info('fa-phone', 'Phone', c.phone, c.phone ? 'tel:' + c.phone.replace(/[^\d+]/g, '') : '')}
+                ${info('fa-location-dot', 'Address', c.address)}
+                ${info('fa-note-sticky', 'Notes', c.notes)}
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="card p-6 xl:col-span-2">
+            <h3 class="section-title mb-4">Order History</h3>
+            ${orders.length ? `<div class="overflow-x-auto"><table class="w-full text-sm">
+                <thead><tr class="border-b border-gray-100">
+                    <th class="text-left py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Order</th>
+                    <th class="text-left py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="text-left py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Items</th>
+                    <th class="text-right py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
+                    <th class="text-center py-3 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                </tr></thead>
+                <tbody>${orders.map(o => `<tr class="border-b border-gray-50 cursor-pointer align-top" onclick="showOrderDetail('${o.id}')">
+                    <td class="py-3 px-2 font-medium text-brand whitespace-nowrap">#${o.id}${o.source === 'online' ? ' <span class="badge bg-brand-pale text-brand text-[10px] px-2 py-0 ml-1">Web</span>' : ''}</td>
+                    <td class="py-3 px-2 text-gray-500 whitespace-nowrap">${o.date}</td>
+                    <td class="py-3 px-2 text-gray-600">${o.products.map(l => `${l.qty} × ${productLink(l.name)}`).join('<br>')}</td>
+                    <td class="py-3 px-2 text-right font-semibold">${RRStore.money(o.total)}</td>
+                    <td class="py-3 px-2 text-center">${getStatusBadge(o.status)}</td>
+                </tr>`).join('')}</tbody></table></div>`
+            : '<p class="text-sm text-[#8A9387] py-8 text-center">No orders yet.</p>'}
+        </div>
+
+        <div class="card p-6">
+            <h3 class="section-title mb-4">Top Products</h3>
+            ${topList.length ? `<ul class="space-y-3">${topList.map((t, i) => {
+                const p = productByName(t.name);
+                return `<li class="flex items-center gap-3 ${p ? 'cursor-pointer rounded-xl -mx-2 px-2 py-1 hover:bg-[#F6F8F4] transition' : ''}" ${p ? `onclick="openProduct(${p.id})"` : ''}>
+                    <span class="text-xs font-bold text-[#A3AC9F] w-4">${i + 1}</span>
+                    ${p ? productThumb(p, 'w-11 h-11 rounded-lg', 'text-xl') : '<span class="w-11 h-11 rounded-lg bg-[#F3F3F0]"></span>'}
+                    <div class="min-w-0 flex-1"><p class="text-sm font-semibold text-[#1F2A1C] truncate">${RRStore.esc(t.name)}</p><p class="text-xs text-[#8A9387]">${t.qty} bought · ${RRStore.money(t.spent)}</p></div>
+                </li>`;
+            }).join('')}</ul>`
+            : '<p class="text-sm text-[#8A9387]">No purchases yet.</p>'}
+        </div>
+    </div>`;
+}
+
+function openCustomerForm(id) {
+    const form = document.getElementById('customerForm');
+    form.reset();
+    const c = id ? RRStore.getCustomer(id) : null;
+    document.getElementById('customerFormTitle').textContent = c ? 'Edit Customer' : 'Add Customer';
+    ['id', 'name', 'email', 'phone', 'address', 'notes'].forEach(k => { form.elements[k].value = c ? (c[k] || '') : ''; });
+    openModal('customerFormModal');
+}
+
+function saveCustomerForm(form) {
+    const fd = new FormData(form);
+    const data = {};
+    ['id', 'name', 'email', 'phone', 'address', 'notes'].forEach(k => { data[k] = String(fd.get(k) || '').trim(); });
+    if (!data.id) {
+        data.id = data.email.toLowerCase();
+        if (RRStore.getCustomer(data.id)) { showToast('A customer with that email already exists'); return; }
+    }
+    RRStore.saveCustomer(data);
+    closeModal('customerFormModal');
+    showToast('<i class="fa-solid fa-circle-check mr-1"></i> ' + RRStore.esc(data.name) + ' saved');
+    if (!fd.get('id')) openCustomer(data.id);
+}
+
+// ── Dashboard helpers ──
+const UNIT_LABEL = { each: 'each', bag: 'per bag', yard: 'per yard', 'half yard': 'per ½ yard' };
+const unitLabel = p => UNIT_LABEL[p.unit] || '';
+const tbdBadge = p => p.priceTBD ? '<span class="badge bg-amber-50 text-amber-700" title="Placeholder price, still to be confirmed">Price to confirm</span>' : '';
+// Studio photo from the shared store (same images as the shop); emoji if a product has none
+function productThumb(p, sizeCls, emojiCls) {
+    const src = RRStore.productImage ? RRStore.productImage(p) : p.image;
+    const box = `${sizeCls} flex-shrink-0 overflow-hidden bg-[#F3F3F0] flex items-center justify-center`;
+    return src
+        ? `<span class="${box}"><img src="${RRStore.esc(src)}" alt="${RRStore.esc(p.name)}" title="${RRStore.esc(p.name)}" loading="lazy" class="w-full h-full object-cover" onerror="this.replaceWith(document.createTextNode('${p.emoji}'))"></span>`
+        : `<span class="${box} ${emojiCls}" title="${RRStore.esc(p.name)}">${p.emoji}</span>`;
+}
+const AVATAR_TONES = ['bg-[#E4F4D3] text-[#2F6A16]', 'bg-[#FDECD2] text-[#9A5B0B]', 'bg-[#E0ECFB] text-[#1E4F8F]', 'bg-[#F6E1EC] text-[#8E2E5C]', 'bg-[#EAE4FA] text-[#4B3696]'];
+function avatarFor(name, size) {
+    const initials = String(name).split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const tone = AVATAR_TONES[[...String(name)].reduce((s, c) => s + c.charCodeAt(0), 0) % AVATAR_TONES.length];
+    const style = size ? ` style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.3)}px"` : '';
+    return `<span class="avatar ${tone}"${style} title="${RRStore.esc(name)}">${RRStore.esc(initials)}</span>`;
+}
+function activityText(o) {
+    const verb = { Pending: 'Placed order', Processing: 'Order processing', Shipped: 'Order shipped', Completed: 'Order completed', Cancelled: 'Order cancelled' }[o.status] || 'Order';
+    return `${verb} #${o.id} · ${RRStore.money(o.total)}`;
+}
+function timeAgo(o) {
+    if (!o.ts) return o.date.replace(/, \d{4}$/, '');
+    const mins = Math.max(0, Math.round((Date.now() - o.ts) / 60000));
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + ' min ago';
+    if (mins < 1440) return Math.round(mins / 60) + ' h ago';
+    return o.date.replace(/, \d{4}$/, '');
+}
+
+// Units and revenue per catalog product from non-cancelled orders, best sellers first
+function productSales() {
+    const by = {};
+    ordersData.filter(o => o.status !== 'Cancelled').forEach(o => o.products.forEach(l => {
+        const t = by[l.name] || (by[l.name] = { name: l.name, qty: 0, revenue: 0 });
+        t.qty += l.qty; t.revenue += l.qty * l.price;
+    }));
+    return Object.values(by)
+        .map(t => Object.assign(t, { p: productByName(t.name) }))
+        .filter(t => t.p)
+        .sort((a, b) => b.revenue - a.revenue || b.qty - a.qty);
+}
+
+function fillCategorySelects() {
+    const cats = RRStore.getCategories();
+    const filter = document.getElementById('categoryFilter');
+    const keep = filter.value;
+    filter.innerHTML = '<option value="">All Categories</option>' + cats.map(c => `<option>${RRStore.esc(c)}</option>`).join('');
+    filter.value = cats.includes(keep) ? keep : '';
+    const add = document.querySelector('#addProductForm select[name=category]');
+    add.innerHTML = cats.map(c => `<option>${RRStore.esc(c)}</option>`).join('');
+}
+
+function renderTopSellers() {
+    const top = productSales().slice(0, 3);
+    document.getElementById('topSellersGrid').innerHTML = top.map(({ p, qty, revenue }) => `
+        <div class="card listing-card relative p-5 pb-4 text-center" onclick="globalSearch(${RRStore.esc(JSON.stringify(p.name))})">
+            <i class="go fa-solid fa-arrow-right -rotate-45 absolute top-4 right-4 text-xs text-[#1F2A1C]"></i>
+            ${productThumb(p, 'w-full aspect-square rounded-xl mb-4', 'text-6xl')}
+            <p class="text-sm font-semibold text-[#1F2A1C] truncate">${RRStore.esc(p.name)}</p>
+            <p class="text-xs text-[#8A9387] mt-1">${qty.toLocaleString()} sold · ${RRStore.money(revenue)}</p>
+        </div>`).join('');
 }
 
 function renderDashboardLive() {
@@ -1237,7 +1736,7 @@ function renderDashboardLive() {
         const txt = critical ? 'text-danger' : 'text-warning';
         return `<div class="flex items-center justify-between p-3 rounded-lg border ${tone}">
             <div class="flex items-center gap-3 min-w-0">
-                <span class="text-xl">${p.emoji}</span>
+                ${productThumb(p, 'w-11 h-11 rounded-lg', 'text-xl')}
                 <div class="min-w-0"><p class="text-sm font-semibold truncate">${RRStore.esc(p.name)}</p><p class="text-xs text-gray-500">SKU: ${RRStore.esc(p.sku)}</p></div>
             </div>
             <div class="text-right flex-shrink-0 ml-2">
@@ -1247,13 +1746,21 @@ function renderDashboardLive() {
         </div>`;
     }).join('') : '<p class="text-sm text-gray-500 text-center py-8">All products are well stocked 🎉</p>';
 
-    document.getElementById('recentOrdersBody').innerHTML = ordersData.slice(0, 6).map((o, i, arr) => `
-        <tr class="${i < arr.length - 1 ? 'border-b border-gray-50' : ''} cursor-pointer hover:bg-gray-50" onclick="showOrderDetail('${o.id}')">
-            <td class="py-3 px-2 font-medium">#${o.id}${o.source === 'online' ? ' <span class="badge bg-amber-100 text-amber-700 ml-1">NEW</span>' : ''}</td>
-            <td class="py-3 px-2 text-gray-600">${RRStore.esc(o.customer)}</td>
-            <td class="py-3 px-2 text-right font-semibold">${RRStore.money(o.total)}</td>
-            <td class="py-3 px-2 text-center">${getStatusBadge(o.status)}</td>
-        </tr>`).join('');
+    document.getElementById('recentActivity').innerHTML = ordersData.slice(0, 7).map(o => `
+        <li class="flex items-start gap-3 p-2 -mx-2 rounded-xl cursor-pointer hover:bg-white transition" onclick="showOrderDetail('${o.id}')">
+            ${avatarFor(o.customer)}
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-[#1F2A1C] truncate">${RRStore.esc(o.customer)}${o.source === 'online' ? ' <span class="badge bg-brand-pale text-brand text-[10px] px-2 py-0 ml-1">Web</span>' : ''}</p>
+                <p class="text-xs text-[#8A9387] truncate">${activityText(o)}</p>
+            </div>
+            <span class="text-[11px] text-[#A3AC9F] whitespace-nowrap pt-0.5">${timeAgo(o)}</span>
+        </li>`).join('');
+
+    renderTopSellers();
+    const customers = [...new Set(ordersData.map(o => o.customer))].slice(0, 4);
+    document.getElementById('customerAvatars').innerHTML = customers.map(c => avatarFor(c)).join('');
+    document.getElementById('catalogStack').innerHTML = inventoryProducts.filter(p => p.stock > 0).slice(0, 4)
+        .map(p => productThumb(p, 'avatar', 'text-lg')).join('');
 
     // Keep the current-month bar of the revenue chart in sync with live revenue
     const ch = window.Chart && Chart.getChart('revenueChart');
@@ -1261,11 +1768,21 @@ function renderDashboardLive() {
 }
 
 function reorderProduct(id) {
-    const p = RRStore.adjustStock(id, 50);
+    const p = RRStore.adjustStock(id, 50, 'Reorder received');
     if (p) showToast('<i class="fa-solid fa-truck mr-1"></i> Restocked ' + RRStore.esc(p.name) + ' — now ' + p.stock + ' in stock');
 }
 
+function previewNewPhoto(file) {
+    readImageFile(file, url => { document.getElementById('newPhotoPreview').innerHTML = `<img src="${url}" alt="" class="w-full h-full object-cover">`; });
+}
+
 function saveNewProduct(form) {
+    const file = form.elements.photo.files[0];
+    if (file) { readImageFile(file, image => createProduct(form, image)); return; }
+    createProduct(form, null);
+}
+
+function createProduct(form, image) {
     const fd = new FormData(form);
     const p = RRStore.addProduct({
         name: fd.get('name').trim(),
@@ -1275,8 +1792,10 @@ function saveNewProduct(form) {
         price: parseFloat(fd.get('price')) || 0,
         cost: parseFloat(fd.get('cost')) || 0,
         stock: parseInt(fd.get('stock'), 10) || 0,
+        image,
     });
     form.reset();
+    document.getElementById('newPhotoPreview').innerHTML = '<i class="fa-solid fa-camera text-lg"></i>';
     closeModal('addProductModal');
     showToast('<i class="fa-solid fa-circle-check mr-1"></i> ' + RRStore.esc(p.name) + ' added — now live in the shop');
 }
@@ -1304,6 +1823,7 @@ function showToast(html) {
     setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3500);
 }
 
+const CHART_GREENS = ['#3D7A1F','#8BC34A','#21470F','#6FA534','#B7E08D','#5E9B2B','#2F6A16','#A7D477','#4C8C36','#D7EFC0'];
 let dashboardChartsInit = false;
 let reportChartsInit = false;
 
@@ -1318,19 +1838,19 @@ function initDashboardCharts() {
             datasets: [{
                 label: 'Revenue',
                 data: [32100, 36450, 41200, 38900, 44100, 47832],
-                backgroundColor: 'rgba(45,90,39,0.15)',
-                borderColor: '#2D5A27',
-                borderWidth: 2,
-                borderRadius: 6,
+                backgroundColor: 'rgba(139,195,74,0.35)',
+                hoverBackgroundColor: 'rgba(139,195,74,0.6)',
+                borderWidth: 0,
+                borderRadius: 10,
                 barPercentage: 0.6,
             },{
                 label: 'Trend',
                 data: [32100, 36450, 41200, 38900, 44100, 47832],
                 type: 'line',
-                borderColor: '#E8A838',
-                backgroundColor: 'rgba(232,168,56,0.1)',
+                borderColor: '#3D7A1F',
+                backgroundColor: 'rgba(61,122,31,0.06)',
                 borderWidth: 3,
-                pointBackgroundColor: '#E8A838',
+                pointBackgroundColor: '#3D7A1F',
                 pointRadius: 5,
                 pointHoverRadius: 7,
                 fill: true,
@@ -1365,14 +1885,21 @@ function initReportCharts() {
         options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'top', labels:{usePointStyle:true, padding:15, font:{family:'Inter',size:12}} } }, scales:{ y:{beginAtZero:true, grid:{color:'rgba(0,0,0,0.04)'}, ticks:{callback:v=>'$'+(v/1000)+'k', font:{family:'Inter'}}}, x:{grid:{display:false}} } }
     });
 
+    // Revenue by Category and Top 10 come from the same order data as the product profiles
+    const sales = productSales();
+    const byCat = {};
+    sales.forEach(t => { byCat[t.p.category] = (byCat[t.p.category] || 0) + t.revenue; });
+    const catRows = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+    const topRows = sales.slice(0, 10);
+
     // Revenue by Category (doughnut)
     new Chart(document.getElementById('categoryChart').getContext('2d'), {
         type: 'doughnut',
         data: {
-            labels: ['Perennials','Shrubs & Trees','Succulents','Annuals','Herbs','Soil & Amendments','Seeds','Pots & Containers','Tools','Fertilizers'],
+            labels: catRows.map(r => r[0]),
             datasets: [{
-                data: [8200, 7600, 6800, 5400, 5200, 4800, 3200, 3100, 2100, 1432],
-                backgroundColor: ['#2D5A27','#4A7C59','#059669','#E8A838','#D97706','#2563EB','#7C3AED','#DC2626','#6B7280','#0D9488'],
+                data: catRows.map(r => Math.round(r[1] * 100) / 100),
+                backgroundColor: CHART_GREENS,
                 borderWidth: 2, borderColor: '#fff'
             }]
         },
@@ -1399,11 +1926,11 @@ function initReportCharts() {
     new Chart(document.getElementById('topProductsChart').getContext('2d'), {
         type: 'bar',
         data: {
-            labels: ['Succulent Trio','Herb Garden Kit','Lavender (English)','Japanese Maple','Potting Mix','Rose Bush','Cherry Tomato','Arborvitae','Ceramic Planter','Pruning Shears'],
+            labels: topRows.map(t => t.name),
             datasets: [{
                 label: 'Revenue',
-                data: [3588, 3574, 3037, 2700, 2456, 2250, 1246, 1190, 1050, 900],
-                backgroundColor: ['#2D5A27','#4A7C59','#059669','#E8A838','#D97706','#2563EB','#7C3AED','#DC2626','#6B7280','#0D9488'],
+                data: topRows.map(t => Math.round(t.revenue * 100) / 100),
+                backgroundColor: CHART_GREENS,
                 borderRadius: 4, barPercentage: 0.7
             }]
         },
@@ -1413,11 +1940,13 @@ function initReportCharts() {
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded', function() {
+    fillCategorySelects();
     filteredProducts = [...inventoryProducts];
     renderInventory();
     renderOrders();
     initDashboardCharts();
     renderDashboardLive();
+    renderCustomers();
     RRStore.subscribe(refreshFromStore);
 });
 </script>

@@ -1,4 +1,4 @@
-# R&R Gardening — Inventory, POS & Online Shop (Presentation Mock)
+# R&R Garden Center — Inventory, POS & Online Shop (Presentation Mock)
 
 Open **`index.html`** (Admin Dashboard) and **`shop.html`** (Customer Shop) in any modern browser.
 No internet or server required — every library and font is bundled in `vendor/`.
@@ -14,8 +14,10 @@ No internet or server required — every library and font is bundled in `vendor/
 ## Customizing
 | What | Where |
 |---|---|
-| Real products (name, SKU, category, price, cost, stock, emoji, description) | `SEED_PRODUCTS` in `js/store.js` — then click **Reset Demo Data** |
-| Logo | Save your logo as `assets/logo.png` — it replaces the 🌿 icon on both pages automatically |
+| Products (name, SKU, category, size `group`/`variant`, `unit`, price, cost, stock, photo) | `SEED_PRODUCTS` in `js/store.js`. Rows marked `priceTBD: true` / `// TODO: confirm price` have placeholder prices. Click **Reset Demo Data** after editing |
+| Logo | `assets/logo.png` (dashboard), `assets/logo-green.png` and `assets/logo-white.png` (transparent, used in the shop) |
+| Product photos | `assets/products/<slug>.jpg` (square, ~800px), set per product in `SEED_PRODUCTS`; sizes of one item share a photo. Replace a file to use a real shot |
+| Shop hero / calculator photo | `assets/hero.jpg`, `assets/yard.jpg` (wide, 16:9) |
 | Tax rate, low-stock threshold, baseline KPIs | `RR_CONFIG` in `js/store.js` |
 
 ## Structure
@@ -24,7 +26,7 @@ index.html        Admin dashboard (inventory, orders, customers, reports, integr
 shop.html         Customer storefront with cart + checkout
 js/store.js       Shared mock data store (localStorage) used by both pages
 vendor/           Offline copies of Tailwind, Chart.js, Font Awesome, Inter & Playfair Display
-assets/           Put logo.png here
+assets/           Logo, hero + banner photos, products/ studio shots (AI-generated placeholders)
 ```
 
 > Data is stored in the browser's localStorage, so it is per-browser. This is a mock — a production

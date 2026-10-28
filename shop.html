@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>R&R Gardening — Your Neighborhood Nursery</title>
+    <title>R&R Garden Center | Stepping stones, rock, soil and hardscape</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <meta name="description" content="Stepping stones, concrete benches and tables, and soil and decorative rock by the yard. Order online and pick up at R&R Garden Center.">
     <!-- All assets are bundled locally in /vendor so the mock works fully offline -->
     <script src="vendor/tailwind.js"></script>
     <link rel="stylesheet" href="vendor/fonts.css">
@@ -15,9 +17,12 @@
                 extend: {
                     colors: {
                         primary: { DEFAULT: '#2D5A27', light: '#4A7C59', dark: '#1A3A18' },
-                        accent: { DEFAULT: '#E8A838', light: '#F0C060', dark: '#C08820' },
+                        accent: { DEFAULT: '#5E9B2B', light: '#7DB547', dark: '#4A7E1F' },
                         surface: '#FFFFFF',
-                        bg: '#F5F3EF',
+                        bg: '#FFFFFF',
+                        tile: '#E7E4DF',
+                        stone: '#CFCBC6',
+                        ink: '#151A15',
                         txt: { DEFAULT: '#1F2937', muted: '#6B7280' },
                         success: '#059669',
                         warning: '#D97706',
@@ -33,13 +38,14 @@
     </script>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #F5F3EF; color: #1F2937; }
+        html { scroll-padding-top: 88px; scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background: #FFFFFF; color: #1F2937; }
         .font-heading { font-family: 'Playfair Display', serif; }
+        .eyebrow { font-family: 'Playfair Display', serif; font-style: italic; }
 
-        /* Scrollbar for category pills */
-        .category-scroll::-webkit-scrollbar { height: 4px; }
-        .category-scroll::-webkit-scrollbar-track { background: transparent; }
-        .category-scroll::-webkit-scrollbar-thumb { background: #2D5A27; border-radius: 4px; }
+        /* Category tabs scroll */
+        .category-scroll { scrollbar-width: none; }
+        .category-scroll::-webkit-scrollbar { display: none; }
 
         /* Cart slide animation */
         .cart-overlay { transition: opacity 0.3s ease; }
@@ -52,11 +58,66 @@
         @keyframes toastIn { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
         @keyframes toastOut { from { opacity:1; transform: translateY(0); } to { opacity:0; transform: translateY(-20px); } }
 
-        /* Product card animation */
-        .product-card { transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.35s ease; }
-        .product-card:hover { transform: translateY(-6px); box-shadow: 0 12px 28px rgba(0,0,0,0.12); }
-        .product-card.hidden-card { opacity: 0; transform: scale(0.95); pointer-events: none; position: absolute; }
-        .product-card.visible-card { opacity: 1; transform: scale(1); position: relative; }
+        /* Product photos */
+        .product-tile .product-img { transition: transform 0.7s cubic-bezier(0.2,0.7,0.2,1); }
+        .product-tile:hover .product-img { transform: scale(1.06); }
+        .product-tile .quick-add { transition: transform 0.3s ease, opacity 0.3s ease; }
+
+        /* Studio shots fade softly into a tile tinted to their backdrop color */
+        .fade-img {
+            -webkit-mask-image: radial-gradient(closest-side, #000 70%, transparent 100%);
+                    mask-image: radial-gradient(closest-side, #000 70%, transparent 100%);
+        }
+        .promo-tile .promo-img { transition: transform 0.8s cubic-bezier(0.2,0.7,0.2,1); }
+        .promo-tile:hover .promo-img { transform: scale(1.06); }
+
+        /* Product sheet: bottom sheet on phones, centered dialog on larger screens */
+        .sheet { transform: translateY(105%); visibility: hidden; transition: transform 0.5s cubic-bezier(0.32,0.72,0,1), visibility 0s linear 0.5s; }
+        .sheet.open { transform: translateY(0); visibility: visible; transition: transform 0.5s cubic-bezier(0.32,0.72,0,1); }
+        .sheet.dragging { transition: none; }
+        @media (min-width: 768px) {
+            .sheet { transform: translateY(14px) scale(0.98); opacity: 0; transition: transform 0.35s cubic-bezier(0.2,0.8,0.2,1), opacity 0.25s ease, visibility 0s linear 0.35s; }
+            .sheet.open { transform: none; opacity: 1; transition: transform 0.35s cubic-bezier(0.2,0.8,0.2,1), opacity 0.25s ease; }
+        }
+        .scrim { opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .scrim.open { opacity: 1; pointer-events: auto; }
+        .chip { border: 1px solid rgba(26,58,24,0.18); border-radius: 9999px; padding: 0.5rem 1rem; font-size: 14px; font-weight: 500; color: #2A3128; transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease; }
+        .chip:hover { border-color: #1A3A18; }
+        .chip[aria-pressed="true"] { background: #1A3A18; border-color: #1A3A18; color: #fff; }
+        .chip:disabled { opacity: 0.4; text-decoration: line-through; cursor: not-allowed; }
+
+        /* Feedback */
+        .bump { animation: bump 0.45s cubic-bezier(0.3,1.6,0.5,1); }
+        @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+        .field { width: 100%; padding: 0.7rem 1rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 12px; font-size: 15px; background: #fff; }
+        .field.invalid { border-color: #DC2626; }
+        .field-error { color: #B91C1C; font-size: 13px; margin-top: 0.35rem; }
+        #checkoutOverlay .checkout-modal { transform: scale(0.97); opacity: 0; }
+        #checkoutOverlay.is-open .checkout-modal { transform: none; opacity: 1; }
+
+        /* Navigation */
+        .nav-link { position: relative; padding: 0.5rem 0.875rem; color: #3F463D; transition: color 0.2s ease; }
+        .nav-link:hover, .nav-link.is-active { color: #1A3A18; }
+        .nav-link::after {
+            content: ''; position: absolute; left: 0.875rem; right: 0.875rem; bottom: 0.15rem; height: 1.5px;
+            background: #5E9B2B; transform: scaleX(0); transform-origin: left; transition: transform 0.3s cubic-bezier(0.2,0.7,0.2,1);
+        }
+        .nav-link:hover::after, .nav-link.is-active::after { transform: scaleX(1); }
+        .icon-btn { width: 2.5rem; height: 2.5rem; display: inline-flex; align-items: center; justify-content: center; border-radius: 9999px; color: #2A3128; transition: background-color 0.2s ease, color 0.2s ease; }
+        .icon-btn:hover { background: rgba(26,58,24,0.06); color: #1A3A18; }
+        :focus-visible { outline: 2px solid #5E9B2B; outline-offset: 2px; border-radius: 6px; }
+
+        /* Hero: text left, framed photo right, live product card overlapping the photo */
+        .hero-rise > * { animation: rise 0.9s cubic-bezier(0.2,0.7,0.2,1) both; }
+        .hero-rise > *:nth-child(2) { animation-delay: 0.1s; }
+        .hero-rise > *:nth-child(3) { animation-delay: 0.2s; }
+        .hero-photo { animation: photoIn 1.2s cubic-bezier(0.2,0.7,0.2,1) both; }
+        .hero-photo img { animation: photoSettle 2.2s cubic-bezier(0.2,0.7,0.2,1) both; }
+        .hero-card { animation: rise 0.9s cubic-bezier(0.2,0.7,0.2,1) 0.45s both; }
+        @keyframes photoIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes photoSettle { from { transform: scale(1.06); } to { transform: scale(1); } }
+        @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+        .text-balance { text-wrap: balance; }
 
         /* Checkout modal */
         .checkout-overlay { transition: opacity 0.3s ease; }
@@ -65,7 +126,7 @@
         /* Mobile menu */
         .mobile-menu { transition: max-height 0.35s ease, opacity 0.25s ease; overflow: hidden; }
         .mobile-menu.closed { max-height: 0; opacity: 0; }
-        .mobile-menu.open { max-height: 300px; opacity: 1; }
+        .mobile-menu.open { max-height: 360px; opacity: 1; }
 
         /* Sticky header shadow */
         .header-scrolled { box-shadow: 0 2px 16px rgba(0,0,0,0.08); }
@@ -76,959 +137,1292 @@
         /* Button press */
         .btn-press:active { transform: scale(0.96); }
 
-        /* Smooth appearance for filtered items */
-        .grid-container { position: relative; }
-
-        /* Hero pattern overlay */
-        .hero-pattern {
-            background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.08) 0%, transparent 50%),
-                              radial-gradient(circle at 80% 20%, rgba(255,255,255,0.06) 0%, transparent 40%),
-                              radial-gradient(circle at 60% 80%, rgba(255,255,255,0.05) 0%, transparent 45%);
-        }
-
-        /* Emoji product image */
-        .emoji-img {
-            width: 80px; height: 80px; font-size: 48px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #e8f5e9, #f1f0e8);
-        }
-
         /* Input focus */
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #2D5A27;
-            box-shadow: 0 0 0 3px rgba(45,90,39,0.15);
+            border-color: #5E9B2B;
+            box-shadow: 0 0 0 3px rgba(94,155,43,0.18);
         }
 
         /* Checkout steps */
         .step-indicator { transition: all 0.3s ease; }
+
+        @media (prefers-reduced-transparency: reduce) {
+            #mainHeader { background: #fff; backdrop-filter: none; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { transition: none !important; animation: none !important; }
+        }
     </style>
 </head>
 <body class="min-h-screen bg-bg">
 
+<a href="#shop" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:rounded-md focus:shadow">Skip to products</a>
+
+<!-- ==================== UTILITY BAR ==================== -->
+<div class="bg-primary-dark text-white/85 text-[13px]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-9 flex items-center justify-center sm:justify-between">
+        <p>Order online, pick up free at Greenhouse Lane.</p>
+        <p class="hidden sm:block text-white/60">Mon-Sat 8am-6pm, Sun 9am-4pm</p>
+    </div>
+</div>
+
 <!-- ==================== HEADER ==================== -->
-<header id="mainHeader" class="sticky top-0 z-50 bg-surface border-b border-gray-100 transition-shadow duration-300">
+<header id="mainHeader" class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-black/[0.06] transition-shadow duration-300">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16 md:h-18">
-            <!-- Logo -->
-            <a href="#" class="flex items-center gap-2 group">
-                <span class="text-2xl" data-rr-logo="2.25rem">🌿</span>
-                <span class="font-heading text-xl md:text-2xl font-bold text-primary">R&R Gardening</span>
+        <div class="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_auto_1fr] items-center h-16 md:h-[72px]">
+            <a href="#hero" class="justify-self-start" aria-label="R&R Garden Center home">
+                <img src="assets/logo-green.png" alt="R&R Garden Center" class="h-8 md:h-10 w-auto">
             </a>
 
-            <!-- Desktop Nav -->
-            <nav class="hidden md:flex items-center gap-8">
-                <a href="#hero" class="text-txt hover:text-primary font-medium transition-colors">Home</a>
-                <a href="#shop" class="text-txt hover:text-primary font-medium transition-colors">Shop</a>
-                <a href="#about" class="text-txt hover:text-primary font-medium transition-colors">About</a>
-                <a href="#contact" class="text-txt hover:text-primary font-medium transition-colors">Contact</a>
-                <a href="index.html" target="rr-admin" class="text-xs text-txt-muted hover:text-primary transition-colors border border-gray-200 rounded px-2 py-1">Admin Dashboard</a>
+            <nav aria-label="Primary" class="hidden md:flex items-center text-[15px] font-medium">
+                <a href="#shop" data-nav="shop" class="nav-link">Shop</a>
+                <a href="#featured" data-nav="featured" class="nav-link">Favorites</a>
+                <a href="#calculator" data-nav="calculator" class="nav-link">Calculator</a>
+                <a href="#about" data-nav="about" class="nav-link">About</a>
+                <a href="#contact" data-nav="contact" class="nav-link">Contact</a>
             </nav>
 
-            <!-- Right side: Search + Cart + Mobile menu -->
-            <div class="flex items-center gap-3">
-                <!-- Search (desktop) -->
-                <div class="hidden md:flex items-center relative">
-                    <input id="searchInput" type="text" placeholder="Search plants..."
-                           class="w-48 lg:w-56 pl-9 pr-3 py-2 rounded-full border border-gray-200 bg-bg text-sm focus:w-64 transition-all duration-300"
-                           oninput="handleSearch(this.value)">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 text-txt-muted text-sm"></i>
-                </div>
-
-                <!-- Cart button -->
-                <button id="cartBtn" onclick="openCart()" class="relative p-2 text-txt hover:text-primary transition-colors btn-press" aria-label="Shopping Cart">
-                    <i class="fa-solid fa-cart-shopping text-xl"></i>
-                    <span id="cartBadge" class="absolute -top-1 -right-1 bg-accent text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+            <div class="justify-self-end flex items-center gap-1">
+                <a href="index.html" target="rr-admin" class="hidden lg:inline-flex items-center gap-1.5 text-[13px] font-medium text-txt-muted hover:text-primary-dark transition-colors px-2">
+                    <i class="fa-solid fa-gauge-high text-[11px]"></i> Admin
+                </a>
+                <span class="hidden lg:block w-px h-5 bg-black/10 mx-2" aria-hidden="true"></span>
+                <button onclick="toggleSearch()" class="icon-btn hidden md:inline-flex" aria-label="Search products">
+                    <i class="fa-solid fa-magnifying-glass text-[17px]"></i>
                 </button>
-
-                <!-- Mobile hamburger -->
-                <button id="mobileMenuBtn" onclick="toggleMobileMenu()" class="md:hidden p-2 text-txt hover:text-primary transition-colors" aria-label="Menu">
-                    <i class="fa-solid fa-bars text-xl" id="menuIcon"></i>
+                <button id="cartBtn" onclick="openCart()" class="icon-btn relative btn-press" aria-label="Open cart">
+                    <i class="fa-solid fa-bag-shopping text-[18px]"></i>
+                    <span id="cartBadge" class="absolute top-0.5 right-0.5 bg-primary-dark text-white text-[10px] font-semibold min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center tabular-nums hidden">0</span>
+                </button>
+                <button id="mobileMenuBtn" onclick="toggleMobileMenu()" class="icon-btn md:hidden -mr-2" aria-label="Menu">
+                    <i class="fa-solid fa-bars text-lg" id="menuIcon"></i>
                 </button>
             </div>
         </div>
+    </div>
 
-        <!-- Mobile menu -->
-        <div id="mobileMenu" class="mobile-menu closed md:hidden border-t border-gray-100">
-            <div class="py-4 space-y-1">
-                <!-- Mobile search -->
-                <div class="px-2 pb-3">
-                    <div class="relative">
-                        <input id="searchInputMobile" type="text" placeholder="Search plants..."
-                               class="w-full pl-9 pr-3 py-2 rounded-full border border-gray-200 bg-bg text-sm"
-                               oninput="handleSearch(this.value)">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-txt-muted text-sm"></i>
-                    </div>
-                </div>
-                <a href="#hero" onclick="closeMobileMenu()" class="block px-4 py-2 text-txt hover:bg-primary/5 hover:text-primary rounded-lg font-medium transition-colors">Home</a>
-                <a href="#shop" onclick="closeMobileMenu()" class="block px-4 py-2 text-txt hover:bg-primary/5 hover:text-primary rounded-lg font-medium transition-colors">Shop</a>
-                <a href="#about" onclick="closeMobileMenu()" class="block px-4 py-2 text-txt hover:bg-primary/5 hover:text-primary rounded-lg font-medium transition-colors">About</a>
-                <a href="#contact" onclick="closeMobileMenu()" class="block px-4 py-2 text-txt hover:bg-primary/5 hover:text-primary rounded-lg font-medium transition-colors">Contact</a>
-                <a href="index.html" class="block px-4 py-2 text-txt-muted hover:text-primary rounded-lg text-sm transition-colors">Admin Dashboard →</a>
+    <!-- Desktop search bar -->
+    <div id="searchBar" class="hidden border-t border-black/[0.06]">
+        <div class="max-w-2xl mx-auto px-4 py-4 relative">
+            <label for="searchInput" class="sr-only">Search products</label>
+            <input id="searchInput" type="text" placeholder="Search stone, rock and soil" autocomplete="off" aria-controls="searchResults"
+                   class="w-full pl-11 pr-4 py-3 rounded-full border border-black/10 bg-white text-[15px] placeholder:text-txt-muted"
+                   oninput="handleSearch(this.value)" onkeydown="if(event.key==='Enter') scrollToShop()">
+            <i class="fa-solid fa-magnifying-glass absolute left-8 top-[2.35rem] -translate-y-1/2 text-txt-muted text-sm"></i>
+            <div id="searchResults" class="hidden absolute left-4 right-4 top-full -mt-1 bg-white rounded-2xl border border-black/[0.06] shadow-[0_24px_48px_-16px_rgba(26,58,24,0.25)] overflow-hidden"></div>
+        </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobileMenu" class="mobile-menu closed md:hidden border-t border-black/[0.06]">
+        <div class="py-4 px-4">
+            <div class="relative mb-3">
+                <label for="searchInputMobile" class="sr-only">Search products</label>
+                <input id="searchInputMobile" type="text" placeholder="Search stone, rock and soil"
+                       class="w-full pl-10 pr-3 py-3 rounded-full border border-black/10 bg-white text-[15px] placeholder:text-txt-muted"
+                       oninput="handleSearch(this.value)" onkeydown="if(event.key==='Enter'){closeMobileMenu();scrollToShop();}">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-txt-muted text-sm"></i>
             </div>
+            <nav aria-label="Mobile" class="divide-y divide-black/[0.06] text-base font-medium text-txt">
+                <a href="#shop" onclick="closeMobileMenu()" class="block py-3 hover:text-primary-dark transition-colors">Shop</a>
+                <a href="#featured" onclick="closeMobileMenu()" class="block py-3 hover:text-primary-dark transition-colors">Favorites</a>
+                <a href="#calculator" onclick="closeMobileMenu()" class="block py-3 hover:text-primary-dark transition-colors">Calculator</a>
+                <a href="#about" onclick="closeMobileMenu()" class="block py-3 hover:text-primary-dark transition-colors">About</a>
+                <a href="#contact" onclick="closeMobileMenu()" class="block py-3 hover:text-primary-dark transition-colors">Contact</a>
+                <a href="index.html" class="block py-3 text-sm text-txt-muted hover:text-primary-dark transition-colors">Admin dashboard</a>
+            </nav>
         </div>
     </div>
 </header>
 
-<!-- ==================== HERO SECTION ==================== -->
-<section id="hero" class="relative overflow-hidden" style="background: linear-gradient(135deg, #1A3A18 0%, #2D5A27 40%, #4A7C59 100%);">
-    <div class="hero-pattern absolute inset-0"></div>
-    <!-- Floating emojis -->
-    <div class="absolute inset-0 pointer-events-none select-none overflow-hidden">
-        <span class="absolute text-4xl opacity-20 animate-pulse" style="top:10%;left:8%;">🌿</span>
-        <span class="absolute text-5xl opacity-15 animate-pulse" style="top:20%;right:12%;animation-delay:0.5s;">🌸</span>
-        <span class="absolute text-3xl opacity-20 animate-pulse" style="bottom:20%;left:15%;animation-delay:1s;">🪴</span>
-        <span class="absolute text-4xl opacity-15 animate-pulse" style="top:40%;right:25%;animation-delay:1.5s;">🌻</span>
-        <span class="absolute text-5xl opacity-10 animate-pulse" style="bottom:10%;right:8%;animation-delay:0.8s;">🌺</span>
-        <span class="absolute text-3xl opacity-20 animate-pulse" style="top:60%;left:5%;animation-delay:1.2s;">🌱</span>
-        <span class="absolute text-4xl opacity-15 animate-pulse" style="bottom:30%;left:45%;animation-delay:0.3s;">🌷</span>
-    </div>
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 text-center">
-        <div class="max-w-3xl mx-auto">
-            <div class="flex justify-center gap-3 mb-6 text-3xl md:text-4xl">
-                <span>🌿</span><span>🌸</span><span>🪴</span><span>🌻</span><span>🌺</span>
-            </div>
-            <h1 class="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-                Welcome to<br><span class="text-accent">R&R Gardening</span>
+<!-- ==================== HERO ==================== -->
+<section id="hero" class="bg-[#EDF0EA]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-14 md:pt-14 md:pb-16 lg:py-16 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-10 lg:gap-14 items-center">
+        <div class="hero-rise">
+            <h1 class="font-heading text-primary-dark text-[2.6rem] sm:text-5xl xl:text-[3.5rem] font-medium leading-[1.06] tracking-[-0.02em] text-balance">
+                Stone, soil and rock for your yard
             </h1>
-            <p class="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed">
-                Your neighborhood nursery — quality plants, expert advice, delivered to your door.
+            <p class="mt-5 text-[#4B5348] text-base md:text-lg leading-relaxed max-w-[42ch]">
+                Stepping stones, concrete benches, and soil and rock by the yard, ready for pickup at our Greenhouse Lane yard.
             </p>
-            <a href="#shop" class="inline-flex items-center gap-2 bg-accent hover:bg-accent-dark text-white font-semibold px-8 py-4 rounded-full text-lg transition-all duration-300 shadow-lg hover:shadow-xl btn-press">
-                <span>Shop Now</span>
-                <i class="fa-solid fa-arrow-right"></i>
-            </a>
+            <div class="mt-8 flex flex-wrap items-center gap-x-7 gap-y-4">
+                <a href="#shop" class="inline-flex items-center gap-2.5 h-12 px-7 rounded-full bg-primary-dark hover:bg-primary text-white text-[15px] font-semibold transition-colors btn-press">
+                    Shop now <i class="fa-solid fa-arrow-right text-xs"></i>
+                </a>
+                <a href="#calculator" class="text-primary-dark text-[15px] font-medium border-b border-primary-dark/30 hover:border-primary-dark pb-0.5 transition-colors">
+                    Estimate materials
+                </a>
+            </div>
         </div>
-    </div>
-    <!-- Wave divider -->
-    <div class="absolute bottom-0 left-0 right-0">
-        <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 40C240 80 480 0 720 40C960 80 1200 0 1440 40V80H0V40Z" fill="#F5F3EF"/>
-        </svg>
+
+        <div class="relative">
+            <div class="hero-photo rounded-3xl overflow-hidden aspect-[4/3] lg:aspect-auto lg:h-[540px] bg-[#0F1E10]">
+                <img src="assets/hero.jpg" alt="Backyard path of square concrete stepping stones set in white marble chips, leading to a concrete bench" class="w-full h-full object-cover" fetchpriority="high">
+            </div>
+            <!-- Customer favorite: rendered from the shared store so price and stock stay live -->
+            <div id="heroPick" class="hero-card absolute left-4 bottom-4 sm:left-6 sm:bottom-6 lg:-left-10 lg:bottom-10 w-[min(320px,calc(100%-2rem))] bg-white rounded-2xl p-3 pr-4 flex items-center gap-3 shadow-[0_18px_40px_-12px_rgba(26,58,24,0.30)]"></div>
+        </div>
     </div>
 </section>
 
-<!-- ==================== SHOP SECTION ==================== -->
-<section id="shop" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-    <!-- Section header -->
-    <div class="text-center mb-10">
-        <h2 class="font-heading text-3xl md:text-4xl font-bold text-primary mb-3">Our Collection</h2>
-        <p class="text-txt-muted text-lg max-w-xl mx-auto">Browse our hand-picked selection of quality plants, supplies, and tools.</p>
-    </div>
-
-    <!-- Category filters -->
-    <div class="mb-8">
-        <div class="category-scroll flex gap-2 overflow-x-auto pb-3 px-1" id="categoryFilters">
-            <!-- Rendered by JS -->
+<!-- ==================== VALUE PROPS ==================== -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-20">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10">
+        <div>
+            <i class="fa-solid fa-cubes-stacked text-2xl text-accent-dark mb-4"></i>
+            <h3 class="text-[15px] font-semibold text-txt mb-1">Sold by the yard</h3>
+            <p class="text-sm text-txt-muted leading-relaxed max-w-[30ch]">Soil and rock by the cubic yard, with half yards on soil.</p>
+        </div>
+        <div>
+            <i class="fa-solid fa-ruler-combined text-2xl text-accent-dark mb-4"></i>
+            <h3 class="text-[15px] font-semibold text-txt mb-1">Know what you need</h3>
+            <p class="text-sm text-txt-muted leading-relaxed max-w-[30ch]">Our calculator turns your measurements into yards.</p>
+        </div>
+        <div>
+            <i class="fa-solid fa-store text-2xl text-accent-dark mb-4"></i>
+            <h3 class="text-[15px] font-semibold text-txt mb-1">Free pickup</h3>
+            <p class="text-sm text-txt-muted leading-relaxed max-w-[30ch]">Order online and collect at our Greenhouse Lane yard.</p>
+        </div>
+        <div>
+            <i class="fa-solid fa-comments text-2xl text-accent-dark mb-4"></i>
+            <h3 class="text-[15px] font-semibold text-txt mb-1">Real advice</h3>
+            <p class="text-sm text-txt-muted leading-relaxed max-w-[30ch]">Ask us about base layers, depths and finishes.</p>
         </div>
     </div>
+</section>
 
-    <!-- Results count -->
-    <div class="flex items-center justify-between mb-6">
-        <p id="resultsCount" class="text-sm text-txt-muted"></p>
+<!-- ==================== PROMO GRID ==================== -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 md:pb-24">
+    <div class="grid grid-cols-1 md:grid-cols-12 md:grid-rows-2 gap-5 md:h-[600px]">
+        <button onclick="shopCategory('Stepping Stones')" class="promo-tile relative flex flex-col justify-start md:col-span-4 md:row-span-2 rounded-3xl overflow-hidden text-left min-h-[440px]" style="background:#D7D3CF">
+            <div class="absolute inset-x-0 bottom-0 flex justify-center"><img src="assets/products/stone-square-gray.jpg" alt="Stack of square gray concrete stepping stones" class="promo-img fade-img w-[92%]"></div>
+            <div class="relative p-7">
+                <h3 class="font-heading text-2xl md:text-[1.7rem] font-semibold text-txt leading-tight">Stepping stones and slabs</h3>
+                <p class="mt-2 text-sm text-[#3F463D]">Square, white and gray, from $8</p>
+                <span class="mt-3 inline-block text-sm font-semibold text-primary-dark underline underline-offset-4">Shop now</span>
+            </div>
+        </button>
+        <button onclick="shopCategory('Hardscape')" class="promo-tile relative flex flex-col justify-center md:col-span-5 rounded-3xl overflow-hidden text-left min-h-[240px]" style="background:#D1CCC7">
+            <div class="absolute inset-y-0 right-0 aspect-square"><img src="assets/products/hardscape-bench.jpg" alt="Cast concrete garden bench" class="promo-img fade-img w-full h-full object-cover"></div>
+            <div class="relative p-7 max-w-[55%]">
+                <h3 class="font-heading text-2xl md:text-[1.7rem] font-semibold text-txt leading-tight">Concrete benches and tables</h3>
+                <span class="mt-3 inline-block text-sm font-semibold text-primary-dark underline underline-offset-4">Shop now</span>
+            </div>
+        </button>
+        <button onclick="shopCategory('Bagged Rock')" class="promo-tile relative flex flex-col justify-start md:col-span-3 rounded-3xl overflow-hidden text-left min-h-[240px]" style="background:#D3D0CC">
+            <div class="absolute -right-3 -bottom-3 w-[62%] aspect-square"><img src="assets/products/bagrock-mbp-polish.jpg" alt="Bag of polished black Mexican beach pebbles" class="promo-img fade-img w-full h-full object-cover"></div>
+            <div class="relative p-7">
+                <h3 class="font-heading text-2xl md:text-[1.7rem] font-semibold text-txt leading-tight">Decorative pebbles</h3>
+                <span class="mt-3 inline-block text-sm font-semibold text-primary-dark underline underline-offset-4">Shop now</span>
+            </div>
+        </button>
+        <button onclick="shopCategory('Bulk Soil')" class="promo-tile relative flex flex-col justify-start md:col-span-3 rounded-3xl overflow-hidden text-left min-h-[240px]" style="background:#D4D1CF">
+            <div class="absolute -right-3 -bottom-3 w-[62%] aspect-square"><img src="assets/products/soil-bulk-top.jpg" alt="Mound of screened top soil" class="promo-img fade-img w-full h-full object-cover"></div>
+            <div class="relative p-7">
+                <h3 class="font-heading text-2xl md:text-[1.7rem] font-semibold text-txt leading-tight">Soil by the yard</h3>
+                <span class="mt-3 inline-block text-sm font-semibold text-primary-dark underline underline-offset-4">Shop now</span>
+            </div>
+        </button>
+        <button onclick="shopCategory('Bulk Rock & Gravel')" class="promo-tile relative flex flex-col justify-center md:col-span-5 rounded-3xl overflow-hidden text-left min-h-[240px]" style="background:#D8D5D1">
+            <div class="absolute inset-y-0 right-0 aspect-square"><img src="assets/products/rock-river.jpg" alt="Pile of multicolor river rock" class="promo-img fade-img w-full h-full object-cover"></div>
+            <div class="relative p-7 max-w-[55%]">
+                <h3 class="font-heading text-2xl md:text-[1.7rem] font-semibold text-txt leading-tight">Rock and gravel</h3>
+                <p class="mt-2 text-sm text-[#3F463D]">14 kinds, by the cubic yard</p>
+                <span class="mt-3 inline-block text-sm font-semibold text-primary-dark underline underline-offset-4">Shop now</span>
+            </div>
+        </button>
+    </div>
+</section>
+
+<!-- ==================== CUSTOMER FAVORITES ==================== -->
+<section id="featured" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 md:pb-24">
+    <div class="flex items-end justify-between gap-4 mb-8">
+        <h2 class="font-heading text-3xl md:text-4xl font-medium tracking-[-0.01em] text-primary-dark">Customer favorites</h2>
+        <a href="#shop" class="text-sm font-semibold text-primary-dark whitespace-nowrap hover:underline underline-offset-4">Shop all <i class="fa-solid fa-arrow-right text-xs ml-1"></i></a>
+    </div>
+    <div id="featuredGrid" class="grid grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-10"></div>
+</section>
+
+<!-- ==================== MATERIALS CALCULATOR ==================== -->
+<section id="calculator" class="bg-[#EDF0EA]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+        <div class="rounded-3xl overflow-hidden aspect-[4/3] bg-[#0F1E10] order-last lg:order-first">
+            <img src="assets/yard.jpg" alt="Bins of white marble, river rock, lava rock, gravel and top soil at the R&R yard" class="w-full h-full object-cover" loading="lazy">
+        </div>
+        <div>
+            <h2 class="font-heading text-3xl md:text-4xl font-medium tracking-[-0.01em] text-primary-dark">How much do you need?</h2>
+            <p class="mt-3 text-[#4B5348] leading-relaxed max-w-[48ch]">Enter the area you're covering and how deep. We round up to what we sell, so you don't come up short.</p>
+
+            <form class="mt-8 space-y-5" onsubmit="event.preventDefault(); addCalcToCart();">
+                <div>
+                    <label for="calcMaterial" class="block text-sm font-medium text-txt mb-1.5">Material</label>
+                    <select id="calcMaterial" class="field" onchange="calcDepthDefault(); renderCalc()"></select>
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label for="calcLength" class="block text-sm font-medium text-txt mb-1.5">Length (ft)</label>
+                        <input id="calcLength" type="number" inputmode="decimal" min="0" step="0.5" value="20" class="field tabular-nums" oninput="renderCalc()">
+                    </div>
+                    <div>
+                        <label for="calcWidth" class="block text-sm font-medium text-txt mb-1.5">Width (ft)</label>
+                        <input id="calcWidth" type="number" inputmode="decimal" min="0" step="0.5" value="4" class="field tabular-nums" oninput="renderCalc()">
+                    </div>
+                    <div>
+                        <label for="calcDepth" class="block text-sm font-medium text-txt mb-1.5">Depth (in)</label>
+                        <input id="calcDepth" type="number" inputmode="decimal" min="0" step="0.5" value="3" class="field tabular-nums" oninput="renderCalc()">
+                    </div>
+                </div>
+                <div class="rounded-2xl bg-white p-5" aria-live="polite">
+                    <p class="text-sm text-txt-muted" id="calcExact"></p>
+                    <p class="mt-1 text-xl font-semibold text-txt" id="calcRecommend"></p>
+                    <p class="mt-1 text-sm text-txt-muted tabular-nums" id="calcPrice"></p>
+                </div>
+                <button id="calcAdd" type="submit" class="inline-flex items-center gap-2.5 h-12 px-7 rounded-full bg-primary-dark hover:bg-primary text-white text-[15px] font-semibold transition-colors btn-press disabled:opacity-40 disabled:cursor-not-allowed">
+                    Add to cart
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== FULL CATALOG ==================== -->
+<section id="shop" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+    <h2 class="font-heading text-3xl md:text-4xl font-medium tracking-[-0.01em] text-primary-dark mb-6">Shop all</h2>
+
+    <!-- Category tabs -->
+    <div class="border-b border-black/[0.08] mb-6">
+        <div class="category-scroll flex gap-6 overflow-x-auto px-1" id="categoryFilters" role="tablist" aria-label="Categories"></div>
+    </div>
+
+    <!-- Results count + sort -->
+    <div class="flex items-center justify-between mb-8">
+        <p id="resultsCount" class="text-sm text-txt-muted" aria-live="polite"></p>
+        <label for="sortSelect" class="sr-only">Sort products</label>
         <select id="sortSelect" onchange="sortProducts(this.value)"
-                class="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-surface text-txt cursor-pointer">
-            <option value="default">Sort: Featured</option>
-            <option value="price-asc">Price: Low to High</option>
-            <option value="price-desc">Price: High to Low</option>
-            <option value="rating">Top Rated</option>
-            <option value="name">Name A–Z</option>
+                class="text-sm border border-black/10 rounded-full px-4 py-2 bg-surface text-txt cursor-pointer">
+            <option value="default">Featured</option>
+            <option value="price-asc">Price: low to high</option>
+            <option value="price-desc">Price: high to low</option>
+            <option value="name">Name</option>
         </select>
     </div>
 
-    <!-- Product Grid -->
-    <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <!-- Rendered by JS -->
-    </div>
+    <div id="productGrid" class="grid grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-10"></div>
 
     <!-- Empty state -->
     <div id="emptyState" class="hidden text-center py-16">
-        <span class="text-5xl block mb-4">🔍</span>
-        <h3 class="font-heading text-xl font-semibold text-txt mb-2">No products found</h3>
-        <p class="text-txt-muted">Try adjusting your search or filter criteria.</p>
-        <button onclick="resetFilters()" class="mt-4 text-primary hover:underline font-medium">Clear all filters</button>
+        <i class="fa-solid fa-magnifying-glass text-3xl text-gray-300 block mb-4"></i>
+        <h3 class="font-heading text-xl font-medium text-txt mb-2">No matches</h3>
+        <p class="text-txt-muted">Try a different word, or browse every category.</p>
+        <button onclick="resetFilters()" class="mt-4 text-primary-dark font-semibold hover:underline underline-offset-4">Clear search and filters</button>
     </div>
 </section>
 
-<!-- ==================== ABOUT SECTION ==================== -->
-<section id="about" class="bg-surface border-t border-b border-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
-        <div class="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-                <h2 class="font-heading text-3xl md:text-4xl font-bold text-primary mb-6">About R&R Gardening</h2>
-                <p class="text-txt-muted leading-relaxed mb-4">
-                    Founded in 2018, R&R Gardening is Portland's favorite neighborhood nursery. We believe everyone deserves a little green in their life — whether you have a sprawling backyard or a sunny windowsill.
-                </p>
-                <p class="text-txt-muted leading-relaxed mb-6">
-                    Our team of passionate horticulturists hand-selects every plant that comes through our doors. We focus on healthy, locally-adapted varieties that thrive in the Pacific Northwest climate.
-                </p>
-                <div class="grid grid-cols-3 gap-6">
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-primary">2,500+</div>
-                        <div class="text-sm text-txt-muted">Happy Customers</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-primary">300+</div>
-                        <div class="text-sm text-txt-muted">Plant Varieties</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-primary">8 yrs</div>
-                        <div class="text-sm text-txt-muted">In Business</div>
-                    </div>
+<!-- ==================== TESTIMONIAL ==================== -->
+<section class="border-t border-black/[0.06]">
+    <figure class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 text-center">
+        <div class="text-sm mb-6" aria-label="5 out of 5 stars">
+            <i class="fa-solid fa-star star"></i><i class="fa-solid fa-star star"></i><i class="fa-solid fa-star star"></i><i class="fa-solid fa-star star"></i><i class="fa-solid fa-star star"></i>
+        </div>
+        <blockquote class="font-heading text-2xl md:text-[2rem] leading-snug text-primary-dark text-balance">
+            "I ordered fourteen stepping stones and two yards of pea rock online. Everything was loaded and ready when I pulled in."
+        </blockquote>
+        <figcaption class="mt-6 text-sm text-txt-muted">James C., Hawthorne</figcaption>
+    </figure>
+</section>
+
+<!-- ==================== ABOUT ==================== -->
+<section id="about" class="bg-[#EDF0EA]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
+        <div>
+            <h2 class="font-heading text-3xl md:text-4xl font-medium tracking-[-0.01em] text-primary-dark mb-6">About R&R Garden Center</h2>
+            <p class="text-[#4B5348] leading-relaxed mb-4 max-w-[60ch]">
+                R&R Garden Center is a neighborhood landscape supply yard. We stock stepping stones, concrete hardscape, soil and decorative rock for weekend projects and full landscape jobs.
+            </p>
+            <p class="text-[#4B5348] leading-relaxed mb-8 max-w-[60ch]">
+                Not sure what base to use or how deep to go? Ask us. We'd rather help you buy the right amount than sell you extra.
+            </p>
+            <dl class="grid grid-cols-3 gap-6 border-t border-black/[0.08] pt-6">
+                <div>
+                    <dt class="text-sm text-txt-muted order-last">Customers served</dt>
+                    <dd class="font-heading text-3xl font-medium text-primary-dark">2,500+</dd>
                 </div>
-            </div>
-            <div class="flex justify-center">
-                <div class="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-12 text-center">
-                    <div class="text-7xl mb-4">🌿🏡🌸</div>
-                    <p class="font-heading text-2xl font-semibold text-primary italic">"Growing community,<br>one plant at a time."</p>
+                <div>
+                    <dt class="text-sm text-txt-muted">Products in stock</dt>
+                    <dd class="font-heading text-3xl font-medium text-primary-dark" id="aboutProductCount">40+</dd>
                 </div>
-            </div>
+                <div>
+                    <dt class="text-sm text-txt-muted">Years in business</dt>
+                    <dd class="font-heading text-3xl font-medium text-primary-dark">8</dd>
+                </div>
+            </dl>
         </div>
+        <img src="assets/nursery-collage.png" alt="Landscape bed of boulders, red mulch and river stone, and rows of tropical plants at the R&R yard" class="w-full max-w-[460px] h-auto justify-self-center">
     </div>
 </section>
 
-<!-- ==================== NEWSLETTER ==================== -->
-<section class="bg-primary">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        <div class="text-center max-w-2xl mx-auto">
-            <h2 class="font-heading text-2xl md:text-3xl font-bold text-white mb-3">Join Our Garden Club</h2>
-            <p class="text-white/70 mb-8">Get seasonal planting guides, exclusive deals, and expert tips delivered to your inbox.</p>
-            <div class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
-                <input type="email" placeholder="your@email.com" class="flex-1 px-5 py-3 rounded-full text-txt border-0 focus:ring-2 focus:ring-accent">
-                <button onclick="showToast('Thanks for subscribing! 🌱')" class="bg-accent hover:bg-accent-dark text-white font-semibold px-8 py-3 rounded-full transition-colors btn-press whitespace-nowrap">
-                    Subscribe
-                </button>
-            </div>
+<!-- ==================== CONTACT ==================== -->
+<section id="contact">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid sm:grid-cols-3 gap-8">
+        <div>
+            <i class="fa-solid fa-location-dot text-xl text-accent-dark mb-3"></i>
+            <h3 class="text-[15px] font-semibold text-txt mb-1">Visit the yard</h3>
+            <p class="text-sm text-txt-muted">1247 Greenhouse Lane<br>Portland, OR 97201</p>
         </div>
-    </div>
-</section>
-
-<!-- ==================== CONTACT SECTION ==================== -->
-<section id="contact" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
-    <div class="text-center mb-10">
-        <h2 class="font-heading text-3xl md:text-4xl font-bold text-primary mb-3">Visit Us</h2>
-        <p class="text-txt-muted text-lg">We'd love to see you! Stop by or reach out anytime.</p>
-    </div>
-    <div class="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-        <div class="bg-surface rounded-xl p-6 text-center border border-gray-100 shadow-sm">
-            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fa-solid fa-location-dot text-primary text-xl"></i>
-            </div>
-            <h3 class="font-semibold text-txt mb-2">Address</h3>
-            <p class="text-txt-muted text-sm">1247 Greenhouse Lane<br>Portland, OR 97201</p>
+        <div>
+            <i class="fa-regular fa-clock text-xl text-accent-dark mb-3"></i>
+            <h3 class="text-[15px] font-semibold text-txt mb-1">Hours</h3>
+            <p class="text-sm text-txt-muted">Mon-Sat 8am-6pm<br>Sunday 9am-4pm</p>
         </div>
-        <div class="bg-surface rounded-xl p-6 text-center border border-gray-100 shadow-sm">
-            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fa-solid fa-clock text-primary text-xl"></i>
-            </div>
-            <h3 class="font-semibold text-txt mb-2">Hours</h3>
-            <p class="text-txt-muted text-sm">Mon–Sat: 8am – 6pm<br>Sunday: 9am – 4pm</p>
-        </div>
-        <div class="bg-surface rounded-xl p-6 text-center border border-gray-100 shadow-sm">
-            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fa-solid fa-phone text-primary text-xl"></i>
-            </div>
-            <h3 class="font-semibold text-txt mb-2">Contact</h3>
-            <p class="text-txt-muted text-sm">(503) 555-0192<br>hello@rrgardening.com</p>
+        <div>
+            <i class="fa-solid fa-phone text-xl text-accent-dark mb-3"></i>
+            <h3 class="text-[15px] font-semibold text-txt mb-1">Call or email</h3>
+            <p class="text-sm text-txt-muted"><a href="tel:+15035550192" class="hover:text-primary-dark">(503) 555-0192</a><br><a href="mailto:hello@rrgardening.com" class="hover:text-primary-dark">hello@rrgardening.com</a></p>
         </div>
     </div>
 </section>
 
 <!-- ==================== FOOTER ==================== -->
-<footer class="bg-primary-dark text-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-            <!-- Col 1: About -->
+<footer class="bg-ink text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 md:py-16">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
             <div>
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="text-2xl">🌿</span>
-                    <span class="font-heading text-xl font-bold">R&R Gardening</span>
-                </div>
-                <p class="text-white/60 text-sm leading-relaxed mb-4">
-                    Portland's favorite neighborhood nursery. Quality plants, expert advice, and everything you need to grow your perfect garden.
-                </p>
-                <p class="text-white/50 text-sm">
-                    <i class="fa-solid fa-location-dot mr-2"></i>1247 Greenhouse Lane, Portland, OR 97201
+                <img src="assets/logo-white.png" alt="R&R Garden Center" class="h-10 w-auto mb-4">
+                <p class="text-white/60 text-sm leading-relaxed max-w-[34ch]">
+                    Stepping stones, hardscape, soil and rock for every size of project.
                 </p>
             </div>
-            <!-- Col 2: Quick Links -->
             <div>
-                <h4 class="font-semibold text-lg mb-4">Quick Links</h4>
+                <h4 class="text-sm font-semibold mb-4">Shop</h4>
+                <ul class="space-y-2 text-sm" id="footerCategories"></ul>
+            </div>
+            <div>
+                <h4 class="text-sm font-semibold mb-4">Help</h4>
                 <ul class="space-y-2 text-sm">
-                    <li><a href="#shop" class="text-white/60 hover:text-accent transition-colors">Shop</a></li>
-                    <li><a href="#about" class="text-white/60 hover:text-accent transition-colors">About</a></li>
-                    <li><a href="#contact" class="text-white/60 hover:text-accent transition-colors">Contact</a></li>
-                    <li><a href="#" class="text-white/60 hover:text-accent transition-colors">FAQ</a></li>
-                    <li><a href="#" class="text-white/60 hover:text-accent transition-colors">Shipping Policy</a></li>
+                    <li><a href="#calculator" class="text-white/60 hover:text-white transition-colors">Materials calculator</a></li>
+                    <li><a href="#about" class="text-white/60 hover:text-white transition-colors">About us</a></li>
+                    <li><a href="#contact" class="text-white/60 hover:text-white transition-colors">Contact</a></li>
                 </ul>
             </div>
-            <!-- Col 3: Connect -->
             <div>
-                <h4 class="font-semibold text-lg mb-4">Connect</h4>
-                <ul class="space-y-2 text-sm mb-6">
-                    <li class="text-white/60"><i class="fa-solid fa-envelope mr-2"></i>hello@rrgardening.com</li>
-                    <li class="text-white/60"><i class="fa-solid fa-phone mr-2"></i>(503) 555-0192</li>
-                </ul>
-                <div class="flex gap-4">
-                    <a href="#" class="w-10 h-10 bg-white/10 hover:bg-accent rounded-full flex items-center justify-center transition-colors">
-                        <i class="fa-brands fa-facebook-f"></i>
-                    </a>
-                    <a href="#" class="w-10 h-10 bg-white/10 hover:bg-accent rounded-full flex items-center justify-center transition-colors">
-                        <i class="fa-brands fa-instagram"></i>
-                    </a>
-                    <a href="#" class="w-10 h-10 bg-white/10 hover:bg-accent rounded-full flex items-center justify-center transition-colors">
-                        <i class="fa-brands fa-pinterest-p"></i>
-                    </a>
-                    <a href="#" class="w-10 h-10 bg-white/10 hover:bg-accent rounded-full flex items-center justify-center transition-colors">
-                        <i class="fa-brands fa-tiktok"></i>
-                    </a>
-                </div>
+                <h4 class="text-sm font-semibold mb-4">Project tips by email</h4>
+                <form class="flex" onsubmit="event.preventDefault(); subscribe();" novalidate>
+                    <label for="newsletterEmail" class="sr-only">Email address</label>
+                    <input id="newsletterEmail" type="email" autocomplete="email" placeholder="you@email.com" class="flex-1 min-w-0 px-4 py-2.5 rounded-l-full text-txt text-sm border-0">
+                    <button type="submit" class="bg-accent-dark hover:bg-primary text-white text-sm font-semibold px-5 rounded-r-full transition-colors">Join</button>
+                </form>
+                <p id="newsletterMsg" class="text-sm mt-2 text-white/60" aria-live="polite"></p>
             </div>
         </div>
-        <div class="border-t border-white/10 mt-10 pt-8 flex flex-col md:flex-row justify-between items-center gap-3 text-sm text-white/40">
-            <span>© 2026 R&R Gardening. All rights reserved.</span>
+        <div class="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-white/40">
+            <span>© 2026 R&R Garden Center. All rights reserved.</span>
             <span>Powered by R&R Inventory System</span>
         </div>
     </div>
 </footer>
 
+<!-- ==================== PRODUCT SHEET ==================== -->
+<div id="sheetScrim" class="scrim fixed inset-0 bg-black/40 z-[84]" onclick="closeProduct()"></div>
+<div id="productSheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"
+     class="sheet fixed z-[85] inset-x-0 bottom-0 max-h-[92dvh] md:inset-0 md:m-auto md:max-w-4xl md:h-fit md:max-h-[88vh] bg-white rounded-t-3xl md:rounded-3xl overflow-hidden flex flex-col shadow-2xl">
+    <div id="sheetHandle" class="md:hidden pt-2.5 pb-1.5 flex justify-center touch-none cursor-grab" aria-hidden="true"><span class="w-10 h-1.5 rounded-full bg-black/15"></span></div>
+    <button onclick="closeProduct()" class="icon-btn absolute top-3 right-3 z-10 bg-white/90 backdrop-blur" aria-label="Close"><i class="fa-solid fa-xmark text-lg"></i></button>
+    <div id="sheetBody" class="overflow-y-auto overscroll-contain"></div>
+</div>
+
 <!-- ==================== CART SLIDE-OUT ==================== -->
-<div id="cartOverlay" class="cart-overlay fixed inset-0 bg-black/50 z-[60] hidden" onclick="closeCart()"></div>
-<aside id="cartPanel" class="cart-panel closed fixed top-0 right-0 h-full w-full sm:w-[420px] bg-surface z-[70] flex flex-col shadow-2xl">
-    <!-- Cart Header -->
-    <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-        <h2 class="font-heading text-xl font-bold text-primary flex items-center gap-2">
-            <i class="fa-solid fa-cart-shopping text-lg"></i> Your Cart
-        </h2>
-        <button onclick="closeCart()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-txt-muted hover:text-txt transition-colors">
-            <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
+<div id="cartOverlay" class="scrim fixed inset-0 bg-black/40 z-[60]" onclick="closeCart()"></div>
+<aside id="cartPanel" role="dialog" aria-modal="true" aria-labelledby="cartTitle" class="cart-panel closed fixed top-0 right-0 h-full w-full sm:w-[420px] bg-surface z-[70] flex flex-col shadow-2xl">
+    <div class="flex items-center justify-between px-6 py-5 border-b border-black/[0.06]">
+        <h2 id="cartTitle" class="font-heading text-xl font-medium text-txt">Your cart</h2>
+        <button onclick="closeCart()" class="icon-btn" aria-label="Close cart"><i class="fa-solid fa-xmark text-lg"></i></button>
     </div>
-    <!-- Cart Body -->
-    <div id="cartBody" class="flex-1 overflow-y-auto px-6 py-4">
-        <!-- Rendered by JS -->
-    </div>
-    <!-- Cart Footer -->
-    <div id="cartFooter" class="border-t border-gray-100 px-6 py-5 hidden">
-        <div class="space-y-2 mb-5">
-            <div class="flex justify-between text-sm text-txt-muted">
-                <span>Subtotal</span>
-                <span id="cartSubtotal">$0.00</span>
-            </div>
-            <div class="flex justify-between text-sm text-txt-muted">
-                <span>Estimated Tax (8.5%)</span>
-                <span id="cartTax">$0.00</span>
-            </div>
-            <div class="flex justify-between font-bold text-lg text-txt pt-2 border-t border-gray-100">
-                <span>Total</span>
-                <span id="cartTotal">$0.00</span>
-            </div>
+    <div id="cartBody" class="flex-1 overflow-y-auto px-6 py-4"></div>
+    <div id="cartFooter" class="border-t border-black/[0.06] px-6 py-5 hidden">
+        <div class="space-y-2 mb-5 tabular-nums">
+            <div class="flex justify-between text-sm text-txt-muted"><span>Subtotal</span><span id="cartSubtotal">$0.00</span></div>
+            <div class="flex justify-between text-sm text-txt-muted"><span data-tax-label>Estimated tax</span><span id="cartTax">$0.00</span></div>
+            <div class="flex justify-between font-semibold text-lg text-txt pt-2 border-t border-black/[0.06]"><span>Total</span><span id="cartTotal">$0.00</span></div>
         </div>
-        <button onclick="openCheckout()" class="w-full bg-accent hover:bg-accent-dark text-white font-semibold py-3 rounded-full transition-colors btn-press mb-2">
-            Proceed to Checkout
-        </button>
-        <button onclick="closeCart()" class="w-full text-primary hover:underline text-sm py-2">
-            Continue Shopping
-        </button>
+        <button onclick="openCheckout()" class="w-full bg-primary-dark hover:bg-primary text-white text-[15px] font-semibold py-3.5 rounded-full transition-colors btn-press mb-2">Check out</button>
+        <button onclick="closeCart()" class="w-full text-primary-dark hover:underline underline-offset-4 text-sm py-2">Keep shopping</button>
     </div>
 </aside>
 
 <!-- ==================== CHECKOUT MODAL ==================== -->
-<div id="checkoutOverlay" class="checkout-overlay fixed inset-0 bg-black/50 z-[80] hidden flex items-center justify-center p-4" onclick="closeCheckoutOnOverlay(event)">
-    <div id="checkoutModal" class="checkout-modal bg-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <!-- Checkout Header -->
-        <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 sticky top-0 bg-surface rounded-t-2xl z-10">
-            <h2 class="font-heading text-xl font-bold text-primary">Checkout</h2>
-            <button onclick="closeCheckout()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-txt-muted hover:text-txt transition-colors">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
+<div id="checkoutOverlay" class="checkout-overlay fixed inset-0 bg-black/40 z-[80] hidden items-center justify-center p-4" onclick="closeCheckoutOnOverlay(event)">
+    <div id="checkoutModal" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle" class="checkout-modal bg-surface rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between px-6 py-5 border-b border-black/[0.06] sticky top-0 bg-surface z-10">
+            <h2 id="checkoutTitle" class="font-heading text-xl font-medium text-txt">Checkout</h2>
+            <button onclick="closeCheckout()" class="icon-btn" aria-label="Close checkout"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
 
-        <!-- Step Indicators -->
         <div class="flex items-center justify-center gap-2 px-6 pt-5 pb-2">
-            <div id="stepInd1" class="step-indicator flex items-center gap-1">
-                <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">1</span>
-                <span class="text-sm font-medium text-primary hidden sm:inline">Contact</span>
+            <div id="stepInd1" class="step-indicator flex items-center gap-1.5">
+                <span class="w-7 h-7 rounded-full bg-primary-dark text-white flex items-center justify-center text-xs font-semibold">1</span>
+                <span class="text-sm font-medium text-primary-dark hidden sm:inline">Contact</span>
             </div>
-            <div class="w-8 h-px bg-gray-200"></div>
-            <div id="stepInd2" class="step-indicator flex items-center gap-1">
-                <span class="w-8 h-8 rounded-full bg-gray-200 text-txt-muted flex items-center justify-center text-sm font-bold">2</span>
-                <span class="text-sm font-medium text-txt-muted hidden sm:inline">Shipping</span>
+            <div class="w-8 h-px bg-black/10"></div>
+            <div id="stepInd2" class="step-indicator flex items-center gap-1.5">
+                <span class="w-7 h-7 rounded-full bg-black/5 text-txt-muted flex items-center justify-center text-xs font-semibold">2</span>
+                <span class="text-sm font-medium text-txt-muted hidden sm:inline">Pickup</span>
             </div>
-            <div class="w-8 h-px bg-gray-200"></div>
-            <div id="stepInd3" class="step-indicator flex items-center gap-1">
-                <span class="w-8 h-8 rounded-full bg-gray-200 text-txt-muted flex items-center justify-center text-sm font-bold">3</span>
+            <div class="w-8 h-px bg-black/10"></div>
+            <div id="stepInd3" class="step-indicator flex items-center gap-1.5">
+                <span class="w-7 h-7 rounded-full bg-black/5 text-txt-muted flex items-center justify-center text-xs font-semibold">3</span>
                 <span class="text-sm font-medium text-txt-muted hidden sm:inline">Payment</span>
             </div>
         </div>
 
-        <!-- Checkout Body -->
         <div class="px-6 py-5">
             <!-- Step 1: Contact -->
-            <div id="checkoutStep1" class="space-y-4">
-                <h3 class="font-semibold text-txt text-lg mb-3">Contact Information</h3>
+            <form id="checkoutStep1" class="space-y-4" novalidate onsubmit="event.preventDefault(); goToStep(2);">
+                <h3 class="font-semibold text-txt text-lg">Contact information</h3>
                 <div>
-                    <label class="block text-sm font-medium text-txt mb-1">Full Name</label>
-                    <input id="coName" type="text" placeholder="Jane Doe" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+                    <label for="coName" class="block text-sm font-medium text-txt mb-1.5">Full name</label>
+                    <input id="coName" name="name" type="text" autocomplete="name" class="field" aria-describedby="err-coName">
+                    <p id="err-coName" class="field-error hidden"></p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-txt mb-1">Email Address</label>
-                    <input id="coEmail" type="email" placeholder="jane@email.com" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+                    <label for="coEmail" class="block text-sm font-medium text-txt mb-1.5">Email</label>
+                    <input id="coEmail" name="email" type="email" autocomplete="email" class="field" aria-describedby="err-coEmail">
+                    <p id="err-coEmail" class="field-error hidden"></p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-txt mb-1">Phone Number</label>
-                    <input id="coPhone" type="tel" placeholder="(555) 123-4567" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+                    <label for="coPhone" class="block text-sm font-medium text-txt mb-1.5">Phone <span class="text-txt-muted font-normal">(for pickup updates)</span></label>
+                    <input id="coPhone" name="tel" type="tel" autocomplete="tel" class="field">
                 </div>
-                <button onclick="goToStep(2)" class="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 rounded-full transition-colors btn-press mt-2">
-                    Continue to Shipping <i class="fa-solid fa-arrow-right ml-2"></i>
-                </button>
-            </div>
+                <button type="submit" class="w-full bg-primary-dark hover:bg-primary text-white font-semibold py-3 rounded-full transition-colors btn-press">Continue</button>
+            </form>
 
-            <!-- Step 2: Shipping -->
-            <div id="checkoutStep2" class="space-y-4 hidden">
-                <h3 class="font-semibold text-txt text-lg mb-3">Shipping Details</h3>
-                <div class="flex items-center gap-2 p-3 bg-primary/5 rounded-lg mb-2">
-                    <input type="checkbox" id="pickupCheck" class="w-4 h-4 accent-primary" onchange="togglePickup()">
-                    <label for="pickupCheck" class="text-sm font-medium text-primary cursor-pointer">Pickup in store (Free)</label>
-                </div>
-                <div id="shippingFields" class="space-y-4">
+            <!-- Step 2: Pickup or delivery -->
+            <form id="checkoutStep2" class="space-y-4 hidden" novalidate onsubmit="event.preventDefault(); goToStep(3);">
+                <h3 class="font-semibold text-txt text-lg">Pickup or delivery</h3>
+                <label class="flex items-start gap-3 p-4 rounded-2xl border border-black/10 cursor-pointer has-[:checked]:border-primary-dark has-[:checked]:bg-[#EDF0EA]">
+                    <input type="radio" name="fulfil" value="pickup" class="mt-1 accent-[#1A3A18]" checked onchange="togglePickup()">
+                    <span><span class="block text-[15px] font-semibold text-txt">Pick up at our yard</span><span class="block text-sm text-txt-muted">Free. We load it for you at 1247 Greenhouse Lane.</span></span>
+                </label>
+                <label class="flex items-start gap-3 p-4 rounded-2xl border border-black/10 cursor-pointer has-[:checked]:border-primary-dark has-[:checked]:bg-[#EDF0EA]">
+                    <input type="radio" name="fulfil" value="delivery" class="mt-1 accent-[#1A3A18]" onchange="togglePickup()">
+                    <span><span class="block text-[15px] font-semibold text-txt">Delivery</span><span class="block text-sm text-txt-muted">We'll call to confirm the delivery fee and schedule.</span></span>
+                </label>
+                <div id="shippingFields" class="space-y-4 hidden">
                     <div>
-                        <label class="block text-sm font-medium text-txt mb-1">Street Address</label>
-                        <input id="coStreet" type="text" placeholder="123 Garden St" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+                        <label for="coStreet" class="block text-sm font-medium text-txt mb-1.5">Street address</label>
+                        <input id="coStreet" type="text" autocomplete="street-address" class="field" aria-describedby="err-coStreet">
+                        <p id="err-coStreet" class="field-error hidden"></p>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-[2fr_1fr_1fr] gap-3">
                         <div>
-                            <label class="block text-sm font-medium text-txt mb-1">City</label>
-                            <input id="coCity" type="text" placeholder="Portland" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+                            <label for="coCity" class="block text-sm font-medium text-txt mb-1.5">City</label>
+                            <input id="coCity" type="text" autocomplete="address-level2" class="field" aria-describedby="err-coCity">
+                            <p id="err-coCity" class="field-error hidden"></p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-txt mb-1">State</label>
-                            <select id="coState" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
-                                <option>OR</option><option>WA</option><option>CA</option><option>Other</option>
-                            </select>
+                            <label for="coState" class="block text-sm font-medium text-txt mb-1.5">State</label>
+                            <select id="coState" autocomplete="address-level1" class="field"><option>OR</option><option>WA</option><option>CA</option><option>Other</option></select>
+                        </div>
+                        <div>
+                            <label for="coZip" class="block text-sm font-medium text-txt mb-1.5">ZIP</label>
+                            <input id="coZip" type="text" inputmode="numeric" autocomplete="postal-code" maxlength="5" class="field tabular-nums" aria-describedby="err-coZip">
+                            <p id="err-coZip" class="field-error hidden"></p>
                         </div>
                     </div>
-                    <div class="w-1/2">
-                        <label class="block text-sm font-medium text-txt mb-1">ZIP Code</label>
-                        <input id="coZip" type="text" placeholder="97201" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
-                    </div>
                 </div>
-                <div class="flex gap-3 mt-2">
-                    <button onclick="goToStep(1)" class="flex-1 border border-gray-200 text-txt font-semibold py-3 rounded-full hover:bg-gray-50 transition-colors btn-press">
-                        <i class="fa-solid fa-arrow-left mr-2"></i> Back
-                    </button>
-                    <button onclick="goToStep(3)" class="flex-1 bg-primary hover:bg-primary-dark text-white font-semibold py-3 rounded-full transition-colors btn-press">
-                        Continue to Payment <i class="fa-solid fa-arrow-right ml-2"></i>
-                    </button>
+                <div class="flex gap-3 pt-1">
+                    <button type="button" onclick="goToStep(1)" class="flex-1 border border-black/10 text-txt font-semibold py-3 rounded-full hover:bg-black/[0.03] transition-colors btn-press">Back</button>
+                    <button type="submit" class="flex-1 bg-primary-dark hover:bg-primary text-white font-semibold py-3 rounded-full transition-colors btn-press">Continue</button>
                 </div>
-            </div>
+            </form>
 
             <!-- Step 3: Payment -->
-            <div id="checkoutStep3" class="space-y-4 hidden">
-                <h3 class="font-semibold text-txt text-lg mb-3">Payment Information</h3>
-                <!-- Order summary -->
-                <div class="bg-bg rounded-xl p-4 mb-4">
-                    <h4 class="text-sm font-semibold text-txt mb-2">Order Summary</h4>
-                    <div id="checkoutSummaryItems" class="space-y-2 text-sm text-txt-muted mb-3"></div>
-                    <div class="border-t border-gray-200 pt-2 space-y-1">
+            <form id="checkoutStep3" class="space-y-4 hidden" novalidate onsubmit="event.preventDefault(); placeOrder();">
+                <h3 class="font-semibold text-txt text-lg">Payment</h3>
+                <div class="bg-[#EDF0EA] rounded-2xl p-4">
+                    <div id="checkoutSummaryItems" class="space-y-2 text-sm text-[#3F463D] mb-3"></div>
+                    <div class="border-t border-black/10 pt-2 space-y-1 tabular-nums">
                         <div class="flex justify-between text-sm"><span>Subtotal</span><span id="checkoutSubtotal">$0.00</span></div>
-                        <div class="flex justify-between text-sm"><span>Tax (8.5%)</span><span id="checkoutTax">$0.00</span></div>
-                        <div class="flex justify-between font-bold text-primary pt-1"><span>Total</span><span id="checkoutTotal">$0.00</span></div>
+                        <div class="flex justify-between text-sm"><span data-tax-label>Estimated tax</span><span id="checkoutTax">$0.00</span></div>
+                        <div class="flex justify-between font-semibold text-primary-dark pt-1"><span>Total</span><span id="checkoutTotal">$0.00</span></div>
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-txt mb-1">Card Number</label>
-                    <input type="text" placeholder="4242 4242 4242 4242" maxlength="19" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+                    <label for="coCard" class="block text-sm font-medium text-txt mb-1.5">Card number</label>
+                    <input id="coCard" type="text" inputmode="numeric" autocomplete="cc-number" maxlength="19" placeholder="1234 5678 9012 3456" class="field tabular-nums" oninput="formatCard(this)" aria-describedby="err-coCard">
+                    <p id="err-coCard" class="field-error hidden"></p>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-sm font-medium text-txt mb-1">Expiration</label>
-                        <input type="text" placeholder="MM / YY" maxlength="7" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+                        <label for="coExp" class="block text-sm font-medium text-txt mb-1.5">Expiry</label>
+                        <input id="coExp" type="text" inputmode="numeric" autocomplete="cc-exp" maxlength="5" placeholder="MM/YY" class="field tabular-nums" oninput="formatExpiry(this)" aria-describedby="err-coExp">
+                        <p id="err-coExp" class="field-error hidden"></p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-txt mb-1">CVV</label>
-                        <input type="text" placeholder="123" maxlength="4" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm">
+                        <label for="coCvv" class="block text-sm font-medium text-txt mb-1.5">Security code</label>
+                        <input id="coCvv" type="text" inputmode="numeric" autocomplete="cc-csc" maxlength="4" class="field tabular-nums" oninput="this.value=this.value.replace(/\D/g,'')" aria-describedby="err-coCvv">
+                        <p id="err-coCvv" class="field-error hidden"></p>
                     </div>
                 </div>
-                <div class="flex gap-3 mt-2">
-                    <button onclick="goToStep(2)" class="flex-1 border border-gray-200 text-txt font-semibold py-3 rounded-full hover:bg-gray-50 transition-colors btn-press">
-                        <i class="fa-solid fa-arrow-left mr-2"></i> Back
-                    </button>
-                    <button onclick="placeOrder()" class="flex-1 bg-accent hover:bg-accent-dark text-white font-semibold py-3 rounded-full transition-colors btn-press">
-                        <i class="fa-solid fa-lock mr-2"></i> Place Order
-                    </button>
+                <div class="flex gap-3 pt-1">
+                    <button type="button" onclick="goToStep(2)" class="flex-1 border border-black/10 text-txt font-semibold py-3 rounded-full hover:bg-black/[0.03] transition-colors btn-press">Back</button>
+                    <button type="submit" class="flex-1 bg-primary-dark hover:bg-primary text-white font-semibold py-3 rounded-full transition-colors btn-press"><i class="fa-solid fa-lock text-xs mr-2"></i>Place order</button>
                 </div>
-            </div>
+            </form>
 
             <!-- Step 4: Success -->
             <div id="checkoutStep4" class="hidden text-center py-8">
-                <div class="text-6xl mb-4">🎉</div>
-                <h3 class="font-heading text-2xl font-bold text-primary mb-2">Order Placed!</h3>
-                <p class="text-txt-muted mb-1">Thank you for your purchase.</p>
-                <p class="text-sm text-txt-muted mb-1">Order number: <strong class="text-txt" id="orderNumber">#RRG-1048</strong></p>
-                <p class="text-sm text-txt-muted mb-8">A confirmation email has been sent to your inbox.</p>
+                <div class="w-14 h-14 rounded-full bg-[#EDF0EA] text-primary-dark flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-check text-xl"></i></div>
+                <h3 class="font-heading text-2xl font-medium text-primary-dark mb-2">Order placed</h3>
+                <p class="text-txt-muted mb-1">Thanks for your order.</p>
+                <p class="text-sm text-txt-muted mb-1">Order number <strong class="text-txt tabular-nums" id="orderNumber">#RRG-1048</strong></p>
+                <p class="text-sm text-txt-muted mb-8" id="orderNextStep">We'll call when it's ready to pick up.</p>
                 <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                    <button onclick="closeCheckout(); closeCart();" class="bg-primary hover:bg-primary-dark text-white font-semibold px-8 py-3 rounded-full transition-colors btn-press">
-                        Continue Shopping
-                    </button>
-                    <a href="index.html" target="rr-admin" class="border border-primary text-primary hover:bg-primary/5 font-semibold px-6 py-3 rounded-full transition-colors">
-                        <i class="fa-solid fa-gauge-high mr-1"></i> View in Admin Dashboard
-                    </a>
+                    <button onclick="closeCheckout(); closeCart();" class="bg-primary-dark hover:bg-primary text-white font-semibold px-8 py-3 rounded-full transition-colors btn-press">Keep shopping</button>
+                    <a href="index.html" target="rr-admin" class="border border-primary-dark/30 text-primary-dark hover:bg-primary-dark/5 font-semibold px-6 py-3 rounded-full transition-colors">View in Admin Dashboard</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ==================== TOAST CONTAINER ==================== -->
-<div id="toastContainer" class="fixed bottom-6 right-6 z-[90] flex flex-col gap-2 items-end pointer-events-none"></div>
+<!-- ==================== TOASTS ==================== -->
+<div id="toastContainer" role="status" aria-live="polite" class="fixed bottom-6 right-6 left-6 sm:left-auto z-[95] flex flex-col gap-2 items-end pointer-events-none"></div>
 
 <!-- ==================== JAVASCRIPT ==================== -->
 <script>
-// ========== PRODUCT DATA ==========
+// ========== DATA ==========
 // Products come from the shared store (js/store.js) so stock stays in sync with the Admin Dashboard.
+// Sizes of one item share a `group`; the shop shows each group as one card with a size picker.
+const esc = RRStore.esc;
+const TAX_RATE = RRStore.config.taxRate;
+const CART_KEY = 'rr.shop.cart';
+const FEATURED = ['Concrete Bench', 'Square Stepping Stone', 'Mexican Beach Pebble', 'River Rock'];
+const HERO_PICK_SKU = 'RR-HSC-002';
+
 let products = RRStore.getProducts();
+let groups = buildGroups(products);
 let categories = ['All', ...RRStore.getCategories()];
 
-// Live sync: when the dashboard restocks / adds products, refresh the storefront
 RRStore.subscribe(() => {
     products = RRStore.getProducts();
+    groups = buildGroups(products);
     categories = ['All', ...RRStore.getCategories()];
-    // Drop cart lines that are no longer available and clamp quantities to stock
-    cart = cart.filter(c => { const p = products.find(x => x.id === c.id); if (!p || p.stock === 0) return false; c.qty = Math.min(c.qty, p.stock); return true; });
-    renderCategoryFilters();
-    renderProducts();
-    renderCart();
-    updateCartBadge();
+    if (!categories.includes(activeCategory)) activeCategory = 'All';
+    clampCart();
+    renderAll();
+    if (sheet.group) { sheet.group = groups.find(g => g.key === sheet.group.key) || null; sheet.group ? renderSheet() : closeProduct(); }
 });
 
+function buildGroups(list) {
+    const byKey = new Map();
+    list.forEach(p => {
+        const key = p.group || 'sku:' + p.sku;
+        if (!byKey.has(key)) byKey.set(key, { key, name: p.group || p.name, category: p.category, variants: [] });
+        byKey.get(key).variants.push(p);
+    });
+    return [...byKey.values()].map(g => {
+        g.variants.sort((a, b) => a.price - b.price);
+        g.lead = g.variants[0];
+        g.inStock = g.variants.some(v => v.stock > 0);
+        g.minPrice = g.lead.price;
+        g.order = list.indexOf(g.lead);
+        return g;
+    });
+}
+
 // ========== STATE ==========
-let cart = [];
+let cart = loadCart();
 let activeCategory = 'All';
 let searchQuery = '';
 let currentSort = 'default';
 let checkoutStep = 1;
+const sheet = { group: null, variantId: null, qty: 1 };
 
-// ========== INITIALIZATION ==========
 document.addEventListener('DOMContentLoaded', () => {
-    renderCategoryFilters();
-    renderProducts();
-    renderCart();
+    document.querySelectorAll('[data-tax-label]').forEach(el => { el.textContent = `Estimated tax (${+(TAX_RATE * 100).toFixed(2)}%)`; });
+    renderAll();
+    initCalc();
     initScrollHeader();
+    initNavSpy();
+    initSheetDrag();
+    document.addEventListener('keydown', onKeydown);
+    document.addEventListener('click', e => { if (!e.target.closest('#searchBar')) hideSearchResults(); });
 });
 
-// ========== HEADER SCROLL SHADOW ==========
-function initScrollHeader() {
-    const header = document.getElementById('mainHeader');
-    window.addEventListener('scroll', () => {
-        header.classList.toggle('header-scrolled', window.scrollY > 10);
-    });
+function renderAll() {
+    renderCategoryFilters();
+    renderFooterCategories();
+    renderHighlights();
+    renderProducts();
+    renderCart();
+    updateCartBadge();
+    renderCalc(true);
+    document.getElementById('aboutProductCount').textContent = products.length + '+';
 }
 
-// ========== MOBILE MENU ==========
+// ========== FORMATTING ==========
+function fmtPrice(n) { return Number.isInteger(n) ? '$' + n.toLocaleString('en-US') : RRStore.money(n); }
+const UNIT_SUFFIX = { bag: ' / bag', yard: ' / yard', 'half yard': ' / half yard' };
+function unitSuffix(p) { return UNIT_SUFFIX[p.unit] || ''; }
+function groupPriceText(g) {
+    const prices = new Set(g.variants.map(v => v.price));
+    const units = new Set(g.variants.map(v => v.unit));
+    return (prices.size > 1 ? 'From ' : '') + fmtPrice(g.minPrice) + (units.size === 1 ? unitSuffix(g.lead) : '');
+}
+function groupMeta(g) {
+    if (g.variants.length === 1) return g.category;
+    const list = g.variants.map(v => v.variant).join(', ');
+    return list.length <= 30 ? list : `${g.variants.length} sizes`;
+}
+function optionLabel(g) { return g.variants.every(v => /\d/.test(v.variant)) ? 'Size' : 'Finish'; }
+function lineName(p) { return p.group ? `${p.group}, ${p.variant}` : p.name; }
+
+// ========== HEADER ==========
+function initScrollHeader() {
+    const header = document.getElementById('mainHeader');
+    window.addEventListener('scroll', () => header.classList.toggle('header-scrolled', window.scrollY > 10), { passive: true });
+}
+
+function initNavSpy() {
+    const links = document.querySelectorAll('.nav-link[data-nav]');
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            links.forEach(l => {
+                const active = l.dataset.nav === entry.target.id;
+                l.classList.toggle('is-active', active);
+                if (active) l.setAttribute('aria-current', 'location'); else l.removeAttribute('aria-current');
+            });
+        });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    links.forEach(l => { const sec = document.getElementById(l.dataset.nav); if (sec) observer.observe(sec); });
+}
+
 function toggleMobileMenu() {
     const menu = document.getElementById('mobileMenu');
-    const icon = document.getElementById('menuIcon');
-    const isOpen = menu.classList.contains('open');
-    menu.classList.toggle('open', !isOpen);
-    menu.classList.toggle('closed', isOpen);
-    icon.className = isOpen ? 'fa-solid fa-bars text-xl' : 'fa-solid fa-xmark text-xl';
+    const open = !menu.classList.contains('open');
+    menu.classList.toggle('open', open);
+    menu.classList.toggle('closed', !open);
+    document.getElementById('menuIcon').className = open ? 'fa-solid fa-xmark text-lg' : 'fa-solid fa-bars text-lg';
 }
 function closeMobileMenu() {
     const menu = document.getElementById('mobileMenu');
-    const icon = document.getElementById('menuIcon');
     menu.classList.remove('open');
     menu.classList.add('closed');
-    icon.className = 'fa-solid fa-bars text-xl';
+    document.getElementById('menuIcon').className = 'fa-solid fa-bars text-lg';
 }
 
-// ========== CATEGORY FILTERS ==========
+// ========== SEARCH ==========
+function toggleSearch() {
+    const bar = document.getElementById('searchBar');
+    bar.classList.toggle('hidden');
+    if (!bar.classList.contains('hidden')) document.getElementById('searchInput').focus();
+    else hideSearchResults();
+}
+function scrollToShop() {
+    hideSearchResults();
+    document.getElementById('shop').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function shopCategory(cat) {
+    setCategory(categories.includes(cat) ? cat : 'All');
+    scrollToShop();
+}
+function matches(g, q) {
+    return [g.name, g.category, ...g.variants.map(v => `${v.name} ${v.desc} ${v.variant || ''}`)].join(' ').toLowerCase().includes(q);
+}
+function handleSearch(value) {
+    searchQuery = value.toLowerCase().trim();
+    document.getElementById('searchInput').value = value;
+    document.getElementById('searchInputMobile').value = value;
+    renderProducts();
+    renderSearchResults();
+}
+// Instant results under the desktop search field; Enter still jumps to the full filtered list
+function renderSearchResults() {
+    const box = document.getElementById('searchResults');
+    if (!searchQuery || document.getElementById('searchBar').classList.contains('hidden')) { hideSearchResults(); return; }
+    const hits = groups.filter(g => matches(g, searchQuery)).slice(0, 6);
+    box.innerHTML = hits.length
+        ? hits.map(g => `
+            <button type="button" onclick="openProduct('${esc(g.key)}', this)" class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-[#EDF0EA] focus:bg-[#EDF0EA] focus:outline-none">
+                <span class="w-11 h-11 rounded-lg overflow-hidden bg-tile shrink-0">${productPhoto(g.lead, 'w-full h-full object-cover')}</span>
+                <span class="flex-1 min-w-0"><span class="block text-[15px] font-medium text-txt truncate">${esc(g.name)}</span><span class="block text-sm text-txt-muted">${esc(g.category)}</span></span>
+                <span class="text-sm font-semibold text-txt tabular-nums">${groupPriceText(g)}</span>
+            </button>`).join('') + `<button type="button" onclick="scrollToShop()" class="w-full px-4 py-3 text-left text-sm font-semibold text-primary-dark border-t border-black/[0.06] hover:bg-[#EDF0EA]">See all results</button>`
+        : `<p class="px-4 py-4 text-sm text-txt-muted">Nothing matches "${esc(searchQuery)}".</p>`;
+    box.classList.remove('hidden');
+}
+function hideSearchResults() { document.getElementById('searchResults').classList.add('hidden'); }
+
+function resetFilters() {
+    handleSearch('');
+    activeCategory = 'All';
+    currentSort = 'default';
+    document.getElementById('sortSelect').value = 'default';
+    renderCategoryFilters();
+    renderProducts();
+}
+
+// ========== CATEGORIES ==========
 function renderCategoryFilters() {
-    const container = document.getElementById('categoryFilters');
-    container.innerHTML = categories.map(cat => {
-        const isActive = cat === activeCategory;
-        return `<button onclick="setCategory('${cat}')"
-                    class="whitespace-nowrap px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 border
-                    ${isActive
-                        ? 'bg-primary text-white border-primary shadow-sm'
-                        : 'bg-surface text-txt-muted border-gray-200 hover:border-primary hover:text-primary'
-                    }">${cat}</button>`;
+    document.getElementById('categoryFilters').innerHTML = categories.map(cat => {
+        const active = cat === activeCategory;
+        return `<button role="tab" aria-selected="${active}" onclick="setCategory(this.dataset.cat)" data-cat="${esc(cat)}"
+                    class="whitespace-nowrap pb-3 -mb-px text-[15px] font-medium border-b-2 transition-colors
+                    ${active ? 'border-primary-dark text-primary-dark' : 'border-transparent text-txt-muted hover:text-txt'}">${esc(cat)}</button>`;
     }).join('');
 }
-
+function renderFooterCategories() {
+    document.getElementById('footerCategories').innerHTML = categories.slice(1).map(cat =>
+        `<li><button onclick="shopCategory(this.dataset.cat)" data-cat="${esc(cat)}" class="text-white/60 hover:text-white transition-colors">${esc(cat)}</button></li>`).join('');
+}
 function setCategory(cat) {
     activeCategory = cat;
     renderCategoryFilters();
     renderProducts();
 }
-
-// ========== SEARCH ==========
-function handleSearch(value) {
-    searchQuery = value.toLowerCase().trim();
-    // Sync both search inputs
-    document.getElementById('searchInput').value = value;
-    document.getElementById('searchInputMobile').value = value;
-    renderProducts();
-}
-
-function resetFilters() {
-    searchQuery = '';
-    activeCategory = 'All';
-    document.getElementById('searchInput').value = '';
-    document.getElementById('searchInputMobile').value = '';
-    document.getElementById('sortSelect').value = 'default';
-    currentSort = 'default';
-    renderCategoryFilters();
-    renderProducts();
-}
-
-// ========== SORT ==========
 function sortProducts(value) {
     currentSort = value;
     renderProducts();
 }
 
-// ========== RENDER PRODUCTS ==========
+// ========== PRODUCT CARDS ==========
+// Products added in the dashboard without a photo get a quiet placeholder
+function productPhoto(p, cls) {
+    const src = RRStore.productImage(p);
+    return src
+        ? `<img src="${esc(src)}" alt="${esc(p.group || p.name)}" loading="lazy" class="${cls}">`
+        : `<div class="${cls} flex items-center justify-center text-gray-400"><i class="fa-solid fa-image text-3xl"></i></div>`;
+}
+
+function productCard(g) {
+    const p = g.lead;
+    const multi = g.variants.length > 1;
+    const lowStock = !multi && p.stock > 0 && p.stock <= 10;
+    const badge = !g.inStock
+        ? `<span class="absolute top-3 left-3 bg-white/90 text-txt text-xs font-semibold px-2.5 py-1 rounded-md">Sold out</span>`
+        : lowStock ? `<span class="absolute top-3 left-3 bg-white/90 text-[#9A5B0B] text-xs font-semibold px-2.5 py-1 rounded-md">Only ${p.stock} left</span>` : '';
+    const action = !g.inStock ? ''
+        : multi
+            ? `<button onclick="openProduct('${esc(g.key)}', this)" class="quick-add absolute bottom-3 right-3 h-10 px-4 rounded-full bg-white text-primary-dark text-sm font-semibold shadow-[0_6px_16px_-6px_rgba(26,58,24,0.35)] hover:bg-primary-dark hover:text-white transition-colors btn-press">Choose ${optionLabel(g).toLowerCase()}</button>`
+            : `<button onclick="addToCart(${p.id}, 1, this)" class="quick-add absolute bottom-3 right-3 w-10 h-10 rounded-full bg-white text-primary-dark shadow-[0_6px_16px_-6px_rgba(26,58,24,0.35)] hover:bg-primary-dark hover:text-white flex items-center justify-center transition-colors btn-press" aria-label="Add ${esc(g.name)} to cart"><i class="fa-solid fa-plus"></i></button>`;
+    return `
+    <article class="product-tile group flex flex-col">
+        <div class="relative aspect-square bg-tile rounded-2xl overflow-hidden">
+            <button onclick="openProduct('${esc(g.key)}', this)" class="block w-full h-full" aria-label="View ${esc(g.name)}">
+                ${productPhoto(p, `product-img w-full h-full object-cover ${g.inStock ? '' : 'grayscale opacity-60'}`)}
+            </button>
+            ${badge}
+            ${action}
+        </div>
+        <button onclick="openProduct('${esc(g.key)}', this)" class="text-left pt-3">
+            <h3 class="text-[15px] font-medium text-txt leading-snug">${esc(g.name)}</h3>
+            <p class="text-sm text-txt-muted mt-0.5">${esc(groupMeta(g))}</p>
+            <p class="text-[15px] font-semibold text-txt mt-1 tabular-nums">${groupPriceText(g)}</p>
+        </button>
+    </article>`;
+}
+
+function renderHighlights() {
+    const picked = FEATURED.map(name => groups.find(g => g.name === name)).filter(g => g && g.inStock);
+    const fill = groups.filter(g => g.inStock && !picked.includes(g));
+    document.getElementById('featuredGrid').innerHTML = picked.concat(fill).slice(0, 4).map(productCard).join('');
+    renderHeroPick();
+}
+
+function renderHeroPick() {
+    const el = document.getElementById('heroPick');
+    const p = products.find(x => x.sku === HERO_PICK_SKU) || products.find(x => x.stock > 0);
+    el.classList.toggle('hidden', !p);
+    if (!p) return;
+    const action = p.stock > 0
+        ? `<button onclick="addToCart(${p.id}, 1, this)" class="w-10 h-10 shrink-0 rounded-full bg-primary-dark hover:bg-primary text-white flex items-center justify-center transition-colors btn-press" aria-label="Add ${esc(p.name)} to cart"><i class="fa-solid fa-plus text-sm"></i></button>`
+        : `<span class="text-xs font-medium text-txt-muted shrink-0">Sold out</span>`;
+    el.innerHTML = `
+        <div class="w-16 h-16 rounded-xl overflow-hidden bg-tile shrink-0">${productPhoto(p, 'w-full h-full object-cover')}</div>
+        <div class="min-w-0 flex-1">
+            <p class="text-xs text-txt-muted">Customer favorite</p>
+            <p class="text-[15px] font-semibold text-txt truncate">${esc(p.name)}</p>
+            <p class="text-sm font-semibold text-primary tabular-nums">${fmtPrice(p.price)}</p>
+        </div>
+        ${action}`;
+}
+
 function renderProducts() {
-    let filtered = products.filter(p => {
-        const matchCat = activeCategory === 'All' || p.category === activeCategory;
-        const matchSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery) || p.desc.toLowerCase().includes(searchQuery) || p.category.toLowerCase().includes(searchQuery);
-        return matchCat && matchSearch;
-    });
-
-    // Sort
-    switch(currentSort) {
-        case 'price-asc':  filtered.sort((a,b) => a.price - b.price); break;
-        case 'price-desc': filtered.sort((a,b) => b.price - a.price); break;
-        case 'rating':     filtered.sort((a,b) => b.rating - a.rating); break;
-        case 'name':       filtered.sort((a,b) => a.name.localeCompare(b.name)); break;
+    let list = groups.filter(g => (activeCategory === 'All' || g.category === activeCategory) && (!searchQuery || matches(g, searchQuery)));
+    switch (currentSort) {
+        case 'price-asc':  list.sort((a, b) => a.minPrice - b.minPrice); break;
+        case 'price-desc': list.sort((a, b) => b.minPrice - a.minPrice); break;
+        case 'name':       list.sort((a, b) => a.name.localeCompare(b.name)); break;
+        default:           list.sort((a, b) => a.order - b.order);
     }
-
     const grid = document.getElementById('productGrid');
     const empty = document.getElementById('emptyState');
-    const count = document.getElementById('resultsCount');
+    grid.classList.toggle('hidden', !list.length);
+    empty.classList.toggle('hidden', !!list.length);
+    document.getElementById('resultsCount').textContent = `${list.length} item${list.length === 1 ? '' : 's'}${searchQuery ? ` for "${searchQuery}"` : ''}`;
+    grid.innerHTML = list.map(productCard).join('');
+}
 
-    if (filtered.length === 0) {
-        grid.classList.add('hidden');
-        empty.classList.remove('hidden');
-        count.textContent = '0 products';
-        return;
-    }
-
-    grid.classList.remove('hidden');
-    empty.classList.add('hidden');
-    count.textContent = `${filtered.length} product${filtered.length !== 1 ? 's' : ''}`;
-
-    grid.innerHTML = filtered.map(p => {
-        let stockHtml, btnHtml;
-        if (p.stock === 0) {
-            stockHtml = `<span class="text-xs font-medium text-danger"><i class="fa-solid fa-circle-xmark mr-1"></i>Out of Stock</span>`;
-            btnHtml = `<button disabled class="w-full py-2.5 rounded-full text-sm font-semibold bg-gray-100 text-gray-400 cursor-not-allowed">Out of Stock</button>`;
-        } else if (p.stock <= 10) {
-            stockHtml = `<span class="text-xs font-medium text-warning"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Low Stock — ${p.stock} left</span>`;
-            btnHtml = `<button onclick="addToCart(${p.id})" class="w-full py-2.5 rounded-full text-sm font-semibold bg-primary hover:bg-primary-dark text-white transition-colors btn-press"><i class="fa-solid fa-cart-plus mr-1"></i> Add to Cart</button>`;
-        } else {
-            stockHtml = `<span class="text-xs font-medium text-success"><i class="fa-solid fa-circle-check mr-1"></i>In Stock</span>`;
-            btnHtml = `<button onclick="addToCart(${p.id})" class="w-full py-2.5 rounded-full text-sm font-semibold bg-primary hover:bg-primary-dark text-white transition-colors btn-press"><i class="fa-solid fa-cart-plus mr-1"></i> Add to Cart</button>`;
-        }
-
-        const stars = renderStars(p.rating);
-
-        return `
-        <div class="product-card visible-card bg-surface rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-            <div class="flex items-center justify-center py-8 bg-gradient-to-br from-primary/5 to-accent/5">
-                <div class="emoji-img"><span>${p.emoji}</span></div>
+// ========== PRODUCT SHEET ==========
+function openProduct(key, trigger) {
+    const g = groups.find(x => x.key === key);
+    if (!g) return;
+    hideSearchResults();
+    sheet.group = g;
+    sheet.variantId = (g.variants.find(v => v.stock > 0) || g.lead).id;
+    sheet.qty = 1;
+    renderSheet();
+    document.getElementById('sheetBody').scrollTop = 0;
+    document.getElementById('sheetScrim').classList.add('open');
+    document.getElementById('productSheet').classList.add('open');
+    pushLayer('sheet', document.getElementById('productSheet'), closeProduct, trigger);
+}
+function closeProduct() {
+    const el = document.getElementById('productSheet');
+    if (!el.classList.contains('open')) return;
+    el.classList.remove('open');
+    el.style.transform = '';
+    document.getElementById('sheetScrim').classList.remove('open');
+    popLayer('sheet');
+}
+function selectVariant(id) { sheet.variantId = id; sheet.qty = 1; renderSheet(); }
+function changeSheetQty(delta) {
+    const v = products.find(p => p.id === sheet.variantId);
+    sheet.qty = Math.max(1, Math.min(v ? v.stock : 1, sheet.qty + delta));
+    renderSheet();
+}
+function renderSheet() {
+    const g = sheet.group;
+    const v = g.variants.find(x => x.id === sheet.variantId) || g.lead;
+    const isBulk = v.unit === 'yard' || v.unit === 'half yard';
+    const qtyUnit = { bag: 'bags', yard: 'yards', 'half yard': 'half yards' }[v.unit] || '';
+    const options = g.variants.length > 1 ? `
+        <fieldset class="mt-6">
+            <legend class="text-sm font-medium text-txt mb-2">${optionLabel(g)}</legend>
+            <div class="flex flex-wrap gap-2">
+                ${g.variants.map(x => `<button type="button" class="chip tabular-nums" aria-pressed="${x.id === v.id}" ${x.stock > 0 ? '' : 'disabled'} onclick="selectVariant(${x.id})">${esc(x.variant)}</button>`).join('')}
             </div>
-            <div class="p-5 flex flex-col flex-1">
-                <div class="flex items-start justify-between mb-1">
-                    <h3 class="font-semibold text-txt leading-snug">${p.name}</h3>
-                </div>
-                <span class="inline-block text-xs text-txt-muted bg-bg rounded-full px-2.5 py-0.5 mb-2 self-start">${p.category}</span>
-                <p class="text-sm text-txt-muted mb-3 line-clamp-1">${p.desc}</p>
-                <div class="flex items-center gap-2 mb-3">
-                    ${stars}
-                    <span class="text-xs text-txt-muted">${p.rating}</span>
-                </div>
-                <div class="mt-auto">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-xl font-bold text-primary">\$${p.price.toFixed(2)}</span>
-                        ${stockHtml}
+        </fieldset>` : '';
+    const stockLine = v.stock === 0 ? '<span class="text-[#B91C1C]">Sold out</span>'
+        : v.stock <= 10 ? `<span class="text-[#9A5B0B]">Only ${v.stock} left</span>` : '<span class="text-primary">In stock</span>';
+    document.getElementById('sheetBody').innerHTML = `
+        <div class="grid md:grid-cols-2">
+            <div class="bg-tile aspect-[4/3] md:aspect-auto md:min-h-[520px]">${productPhoto(v, 'w-full h-full object-cover')}</div>
+            <div class="p-6 md:p-8 flex flex-col">
+                <p class="text-sm text-txt-muted">${esc(g.category)}</p>
+                <h2 id="sheetTitle" class="font-heading text-3xl font-medium text-primary-dark tracking-[-0.01em] mt-1 pr-10">${esc(g.name)}</h2>
+                <p class="mt-2 text-xl font-semibold text-txt tabular-nums">${fmtPrice(v.price)}<span class="text-base font-normal text-txt-muted">${unitSuffix(v)}</span></p>
+                <p class="mt-4 text-[15px] text-[#4B5348] leading-relaxed">${esc(v.desc)}</p>
+                ${options}
+                <div class="mt-6 flex items-center gap-4">
+                    <div class="flex items-center rounded-full border border-black/10">
+                        <button type="button" class="w-10 h-10 flex items-center justify-center text-lg text-txt hover:text-primary-dark disabled:opacity-30" onclick="changeSheetQty(-1)" ${sheet.qty <= 1 ? 'disabled' : ''} aria-label="Decrease quantity">−</button>
+                        <span class="w-8 text-center font-semibold tabular-nums" aria-live="polite">${sheet.qty}</span>
+                        <button type="button" class="w-10 h-10 flex items-center justify-center text-lg text-txt hover:text-primary-dark disabled:opacity-30" onclick="changeSheetQty(1)" ${sheet.qty >= v.stock ? 'disabled' : ''} aria-label="Increase quantity">+</button>
                     </div>
-                    ${btnHtml}
+                    <span class="text-sm text-txt-muted">${qtyUnit}</span>
+                    <span class="ml-auto text-sm font-medium">${stockLine}</span>
                 </div>
+                <button type="button" onclick="addToCart(${v.id}, sheet.qty, this)" ${v.stock > 0 ? '' : 'disabled'}
+                        class="mt-6 w-full h-12 rounded-full bg-primary-dark hover:bg-primary text-white text-[15px] font-semibold transition-colors btn-press disabled:opacity-40 disabled:cursor-not-allowed tabular-nums">
+                    Add to cart · ${RRStore.money(v.price * sheet.qty)}
+                </button>
+                ${isBulk ? `<button type="button" onclick="useCalculatorFor('${esc(g.key)}')" class="mt-4 text-sm font-semibold text-primary-dark hover:underline underline-offset-4 self-start">Not sure how much? Use the calculator</button>` : ''}
+                ${v.priceTBD ? '<p class="mt-4 text-xs text-txt-muted">Price shown is an estimate. We confirm the final price when we call about your order.</p>' : ''}
             </div>
         </div>`;
-    }).join('');
 }
 
-function renderStars(rating) {
-    let html = '';
-    const full = Math.floor(rating);
-    const half = rating % 1 >= 0.3;
-    for (let i = 0; i < full; i++) html += '<i class="fa-solid fa-star star text-sm"></i>';
-    if (half) html += '<i class="fa-solid fa-star-half-stroke star text-sm"></i>';
-    const empty = 5 - full - (half ? 1 : 0);
-    for (let i = 0; i < empty; i++) html += '<i class="fa-regular fa-star star text-sm"></i>';
-    return html;
+// Drag the sheet's handle down to dismiss (phones). Follows the finger 1:1, commits on distance or a quick flick.
+function initSheetDrag() {
+    const handle = document.getElementById('sheetHandle');
+    const el = document.getElementById('productSheet');
+    let startY = 0, lastY = 0, lastT = 0, velocity = 0, dragging = false;
+    handle.addEventListener('pointerdown', e => {
+        dragging = true; startY = lastY = e.clientY; lastT = e.timeStamp; velocity = 0;
+        handle.setPointerCapture(e.pointerId);
+        el.classList.add('dragging');
+    });
+    handle.addEventListener('pointermove', e => {
+        if (!dragging) return;
+        const dy = e.clientY - startY;
+        velocity = (e.clientY - lastY) / Math.max(1, e.timeStamp - lastT);
+        lastY = e.clientY; lastT = e.timeStamp;
+        el.style.transform = `translateY(${dy > 0 ? dy : dy / 4}px)`;   // resist upward drags
+    });
+    const end = e => {
+        if (!dragging) return;
+        dragging = false;
+        el.classList.remove('dragging');
+        const dy = e.clientY - startY;
+        el.style.transform = '';
+        if (dy > 120 || velocity > 0.6) closeProduct();
+    };
+    handle.addEventListener('pointerup', end);
+    handle.addEventListener('pointercancel', end);
 }
 
-// ========== CART FUNCTIONS ==========
-function addToCart(productId) {
-    const product = products.find(p => p.id === productId);
-    if (!product || product.stock === 0) return;
-
-    const existing = cart.find(c => c.id === productId);
-    if (existing) {
-        if (existing.qty < product.stock) {
-            existing.qty++;
-        } else {
-            showToast(`Max stock reached for ${product.name}`, 'warning');
-            return;
-        }
+// ========== MATERIALS CALCULATOR ==========
+function bulkGroups() { return groups.filter(g => g.variants.some(v => v.unit === 'yard')); }
+function initCalc() {
+    const sel = document.getElementById('calcMaterial');
+    sel.innerHTML = bulkGroups().map(g => `<option value="${esc(g.key)}">${esc(g.name)}${g.inStock ? '' : ' (sold out)'}</option>`).join('');
+    const river = bulkGroups().find(g => g.name === 'River Rock');
+    if (river) sel.value = river.key;
+    calcDepthDefault();
+    renderCalc();
+}
+function calcDepthDefault() {
+    const g = groups.find(x => x.key === document.getElementById('calcMaterial').value);
+    if (g) document.getElementById('calcDepth').value = g.category === 'Bulk Soil' ? 4 : 3;
+}
+function useCalculatorFor(key) {
+    closeProduct();
+    document.getElementById('calcMaterial').value = key;
+    calcDepthDefault();
+    renderCalc();
+    document.getElementById('calculator').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+// Soil comes in whole and half yards; rock in whole yards. Always round up.
+function calcPlan() {
+    const g = groups.find(x => x.key === document.getElementById('calcMaterial').value);
+    const num = id => Math.max(0, parseFloat(document.getElementById(id).value) || 0);
+    const yards = num('calcLength') * num('calcWidth') * (num('calcDepth') / 12) / 27;
+    if (!g || yards <= 0) return { g, yards, lines: [] };
+    const full = g.variants.find(v => v.unit === 'yard');
+    const half = g.variants.find(v => v.unit === 'half yard');
+    const lines = [];
+    if (half) {
+        const need = Math.ceil(yards * 2) / 2;
+        if (Math.floor(need)) lines.push({ p: full, qty: Math.floor(need) });
+        if (need % 1) lines.push({ p: half, qty: 1 });
     } else {
-        cart.push({ id: productId, qty: 1 });
+        lines.push({ p: full, qty: Math.max(1, Math.ceil(yards)) });
     }
-
-    renderCart();
-    updateCartBadge();
-    showToast(`Added to cart! ✓ ${product.name}`);
+    return { g, yards, lines };
 }
-
-function removeFromCart(productId) {
-    cart = cart.filter(c => c.id !== productId);
-    renderCart();
-    updateCartBadge();
-}
-
-function changeQty(productId, delta) {
-    const item = cart.find(c => c.id === productId);
-    const product = products.find(p => p.id === productId);
-    if (!item || !product) return;
-
-    item.qty += delta;
-    if (item.qty <= 0) {
-        removeFromCart(productId);
+function renderCalc(silent) {
+    const sel = document.getElementById('calcMaterial');
+    if (!sel || !sel.options.length) return;
+    const { g, yards, lines } = calcPlan();
+    const add = document.getElementById('calcAdd');
+    if (!lines.length) {
+        document.getElementById('calcExact').textContent = 'Enter length, width and depth.';
+        document.getElementById('calcRecommend').textContent = '';
+        document.getElementById('calcPrice').textContent = '';
+        add.disabled = true;
         return;
     }
-    if (item.qty > product.stock) {
-        item.qty = product.stock;
-        showToast(`Max stock reached`, 'warning');
-    }
+    const totalYards = lines.reduce((s, l) => s + l.qty * (l.p.unit === 'half yard' ? 0.5 : 1), 0);
+    const cost = lines.reduce((s, l) => s + l.qty * l.p.price, 0);
+    const available = lines.every(l => l.p.stock >= l.qty);
+    document.getElementById('calcExact').textContent = `About ${yards.toFixed(2)} cubic yards`;
+    document.getElementById('calcRecommend').textContent = `${totalYards} yard${totalYards === 1 ? '' : 's'} of ${g.name}`;
+    document.getElementById('calcPrice').textContent = available ? `${RRStore.money(cost)} before tax` : 'Not enough in stock right now. Call us and we can help.';
+    add.disabled = !available;
+}
+function addCalcToCart() {
+    const { lines } = calcPlan();
+    lines.forEach(l => addToCart(l.p.id, l.qty, null, true));
+    if (lines.length) showToast(`Added ${lines.map(l => `${l.qty} × ${lineName(l.p)}`).join(' and ')}`);
+}
 
+// ========== CART ==========
+function loadCart() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+        return saved.filter(c => products.some(p => p.id === c.id && p.stock > 0)).map(c => ({ id: c.id, qty: Math.min(c.qty, products.find(p => p.id === c.id).stock) }));
+    } catch (e) { return []; }
+}
+function saveCart() { try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch (e) {} }
+function clampCart() {
+    cart = cart.filter(c => { const p = products.find(x => x.id === c.id); if (!p || p.stock === 0) return false; c.qty = Math.min(c.qty, p.stock); return true; });
+    saveCart();
+}
+
+function addToCart(productId, qty = 1, sourceBtn = null, quiet = false) {
+    const p = products.find(x => x.id === productId);
+    if (!p || p.stock === 0) return;
+    const line = cart.find(c => c.id === productId);
+    const current = line ? line.qty : 0;
+    const added = Math.min(qty, p.stock - current);
+    if (added <= 0) { showToast(`That's all the ${lineName(p)} we have in stock.`, 'warning'); return; }
+    if (line) line.qty += added; else cart.push({ id: productId, qty: added });
+    saveCart();
+    renderCart();
+    updateCartBadge(true);
+    if (sourceBtn) confirmButton(sourceBtn);
+    if (!quiet) showToast(`Added ${added > 1 ? added + ' × ' : ''}${lineName(p)}`);
+}
+// Brief in-place confirmation on the button that was pressed
+function confirmButton(btn) {
+    if (btn.dataset.busy) return;
+    btn.dataset.busy = '1';
+    const html = btn.innerHTML;
+    btn.innerHTML = btn.textContent.trim().length > 2 ? '<i class="fa-solid fa-check mr-1.5"></i>Added' : '<i class="fa-solid fa-check"></i>';
+    setTimeout(() => { btn.innerHTML = html; delete btn.dataset.busy; }, 1200);
+}
+function removeFromCart(productId) {
+    cart = cart.filter(c => c.id !== productId);
+    saveCart();
     renderCart();
     updateCartBadge();
 }
-
-function updateCartBadge() {
+function changeQty(productId, delta) {
+    const item = cart.find(c => c.id === productId);
+    const p = products.find(x => x.id === productId);
+    if (!item || !p) return;
+    if (item.qty + delta <= 0) { removeFromCart(productId); return; }
+    if (item.qty + delta > p.stock) { showToast(`That's all the ${lineName(p)} we have in stock.`, 'warning'); return; }
+    item.qty += delta;
+    saveCart();
+    renderCart();
+    updateCartBadge();
+}
+function updateCartBadge(bump) {
     const badge = document.getElementById('cartBadge');
-    const total = cart.reduce((sum, c) => sum + c.qty, 0);
+    const total = cart.reduce((s, c) => s + c.qty, 0);
     badge.textContent = total;
     badge.classList.toggle('hidden', total === 0);
+    document.getElementById('cartBtn').setAttribute('aria-label', `Open cart, ${total} item${total === 1 ? '' : 's'}`);
+    if (bump && total) { badge.classList.remove('bump'); void badge.offsetWidth; badge.classList.add('bump'); }
 }
-
 function getCartTotals() {
-    const subtotal = cart.reduce((sum, c) => {
-        const p = products.find(pr => pr.id === c.id);
-        return sum + (p ? p.price * c.qty : 0);
-    }, 0);
-    const tax = subtotal * 0.085;
-    const total = subtotal + tax;
-    return { subtotal, tax, total };
+    const subtotal = cart.reduce((s, c) => { const p = products.find(x => x.id === c.id); return s + (p ? p.price * c.qty : 0); }, 0);
+    const tax = subtotal * TAX_RATE;
+    return { subtotal, tax, total: subtotal + tax };
 }
-
 function renderCart() {
     const body = document.getElementById('cartBody');
     const footer = document.getElementById('cartFooter');
-
-    if (cart.length === 0) {
+    if (!cart.length) {
         body.innerHTML = `
             <div class="flex flex-col items-center justify-center h-full text-center py-12">
-                <span class="text-5xl mb-4">🛒</span>
-                <h3 class="font-heading text-lg font-semibold text-txt mb-2">Your cart is empty</h3>
-                <p class="text-sm text-txt-muted mb-4">Add some plants to get started!</p>
-                <button onclick="closeCart()" class="text-primary hover:underline font-medium text-sm">Browse Products</button>
+                <i class="fa-solid fa-bag-shopping text-3xl text-gray-300 mb-4"></i>
+                <h3 class="font-heading text-lg font-medium text-txt mb-2">Your cart is empty</h3>
+                <p class="text-sm text-txt-muted mb-4">Stepping stones, rock and soil are a tap away.</p>
+                <button onclick="closeCart(); scrollToShop();" class="text-primary-dark font-semibold text-sm hover:underline underline-offset-4">Shop all</button>
             </div>`;
         footer.classList.add('hidden');
         return;
     }
-
     footer.classList.remove('hidden');
-
     body.innerHTML = cart.map(c => {
-        const p = products.find(pr => pr.id === c.id);
+        const p = products.find(x => x.id === c.id);
         if (!p) return '';
-        const lineTotal = p.price * c.qty;
         return `
-        <div class="flex gap-3 py-4 border-b border-gray-50 last:border-0">
-            <div class="emoji-img flex-shrink-0" style="width:52px;height:52px;font-size:28px;"><span>${p.emoji}</span></div>
+        <div class="flex gap-3 py-4 border-b border-black/[0.05] last:border-0">
+            <div class="w-16 h-16 rounded-xl overflow-hidden bg-tile shrink-0">${productPhoto(p, 'w-full h-full object-cover')}</div>
             <div class="flex-1 min-w-0">
-                <div class="flex justify-between items-start">
-                    <h4 class="font-medium text-txt text-sm truncate pr-2">${p.name}</h4>
-                    <button onclick="removeFromCart(${p.id})" class="text-txt-muted hover:text-danger transition-colors flex-shrink-0" title="Remove">
-                        <i class="fa-solid fa-xmark text-sm"></i>
-                    </button>
+                <div class="flex justify-between items-start gap-2">
+                    <h4 class="font-medium text-txt text-sm">${esc(lineName(p))}</h4>
+                    <button onclick="removeFromCart(${p.id})" class="text-txt-muted hover:text-[#B91C1C] transition-colors shrink-0" aria-label="Remove ${esc(lineName(p))}"><i class="fa-solid fa-xmark text-sm"></i></button>
                 </div>
-                <p class="text-xs text-txt-muted">\$${p.price.toFixed(2)} each</p>
+                <p class="text-xs text-txt-muted tabular-nums">${fmtPrice(p.price)}${unitSuffix(p)}</p>
                 <div class="flex items-center justify-between mt-2">
-                    <div class="flex items-center gap-1 border border-gray-200 rounded-full">
-                        <button onclick="changeQty(${p.id},-1)" class="w-7 h-7 flex items-center justify-center text-txt-muted hover:text-primary rounded-full hover:bg-primary/5 transition-colors text-sm">−</button>
-                        <span class="w-7 text-center text-sm font-medium text-txt">${c.qty}</span>
-                        <button onclick="changeQty(${p.id},1)" class="w-7 h-7 flex items-center justify-center text-txt-muted hover:text-primary rounded-full hover:bg-primary/5 transition-colors text-sm">+</button>
+                    <div class="flex items-center rounded-full border border-black/10">
+                        <button onclick="changeQty(${p.id},-1)" class="w-8 h-8 flex items-center justify-center text-txt-muted hover:text-primary-dark" aria-label="Decrease quantity">−</button>
+                        <span class="w-7 text-center text-sm font-medium tabular-nums">${c.qty}</span>
+                        <button onclick="changeQty(${p.id},1)" class="w-8 h-8 flex items-center justify-center text-txt-muted hover:text-primary-dark" aria-label="Increase quantity">+</button>
                     </div>
-                    <span class="font-semibold text-sm text-txt">\$${lineTotal.toFixed(2)}</span>
+                    <span class="font-semibold text-sm tabular-nums">${RRStore.money(p.price * c.qty)}</span>
                 </div>
             </div>
         </div>`;
     }).join('');
-
     const { subtotal, tax, total } = getCartTotals();
-    document.getElementById('cartSubtotal').textContent = `\$${subtotal.toFixed(2)}`;
-    document.getElementById('cartTax').textContent = `\$${tax.toFixed(2)}`;
-    document.getElementById('cartTotal').textContent = `\$${total.toFixed(2)}`;
+    document.getElementById('cartSubtotal').textContent = RRStore.money(subtotal);
+    document.getElementById('cartTax').textContent = RRStore.money(tax);
+    document.getElementById('cartTotal').textContent = RRStore.money(total);
 }
 
-function resetCart() {
-    cart = [];
-    renderCart();
-    updateCartBadge();
-}
-
-// ========== CART PANEL ==========
 function openCart() {
-    const overlay = document.getElementById('cartOverlay');
+    document.getElementById('cartOverlay').classList.add('open');
     const panel = document.getElementById('cartPanel');
-    overlay.classList.remove('hidden');
-    requestAnimationFrame(() => {
-        overlay.style.opacity = '1';
-        panel.classList.remove('closed');
-        panel.classList.add('open');
-    });
-    document.body.style.overflow = 'hidden';
+    panel.classList.remove('closed');
+    panel.classList.add('open');
+    pushLayer('cart', panel, closeCart, document.getElementById('cartBtn'));
 }
-
 function closeCart() {
-    const overlay = document.getElementById('cartOverlay');
     const panel = document.getElementById('cartPanel');
+    if (!panel.classList.contains('open')) return;
     panel.classList.remove('open');
     panel.classList.add('closed');
-    overlay.style.opacity = '0';
-    setTimeout(() => {
-        overlay.classList.add('hidden');
-    }, 350);
-    document.body.style.overflow = '';
+    document.getElementById('cartOverlay').classList.remove('open');
+    popLayer('cart');
+}
+
+// ========== OVERLAY STACK: scroll lock, Escape, focus trap, focus return ==========
+const layers = [];
+function pushLayer(name, el, close, trigger) {
+    if (layers.some(l => l.name === name)) return;
+    layers.push({ name, el, close, trigger: trigger || document.activeElement });
+    syncScrollLock();
+    requestAnimationFrame(() => { const f = focusables(el)[0]; if (f) f.focus({ preventScroll: true }); });
+}
+function popLayer(name) {
+    const i = layers.findIndex(l => l.name === name);
+    if (i < 0) return;
+    const [layer] = layers.splice(i, 1);
+    syncScrollLock();
+    if (layer.trigger && document.contains(layer.trigger)) layer.trigger.focus({ preventScroll: true });
+}
+function syncScrollLock() { document.body.style.overflow = layers.length ? 'hidden' : ''; }
+function focusables(el) {
+    return [...el.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])')]
+        .filter(x => x.offsetParent !== null);
+}
+function onKeydown(e) {
+    const top = layers[layers.length - 1];
+    if (e.key === 'Escape') {
+        if (top) { e.preventDefault(); top.close(); return; }
+        hideSearchResults();
+        if (!document.getElementById('searchBar').classList.contains('hidden')) toggleSearch();
+        closeMobileMenu();
+        return;
+    }
+    if (e.key === 'Tab' && top) {
+        const f = focusables(top.el);
+        if (!f.length) return;
+        const first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        else if (!top.el.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+    }
 }
 
 // ========== CHECKOUT ==========
 function openCheckout() {
-    if (cart.length === 0) return;
+    if (!cart.length) return;
     checkoutStep = 1;
     renderCheckoutSteps();
     const overlay = document.getElementById('checkoutOverlay');
     overlay.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
+    overlay.classList.add('flex');
+    requestAnimationFrame(() => overlay.classList.add('is-open'));
+    pushLayer('checkout', document.getElementById('checkoutModal'), closeCheckout);
 }
-
 function closeCheckout() {
-    document.getElementById('checkoutOverlay').classList.add('hidden');
-    document.body.style.overflow = '';
-    // Reset to step 1
+    const overlay = document.getElementById('checkoutOverlay');
+    if (overlay.classList.contains('hidden')) return;
+    overlay.classList.remove('is-open', 'flex');
+    overlay.classList.add('hidden');
+    popLayer('checkout');
     checkoutStep = 1;
     renderCheckoutSteps();
 }
+function closeCheckoutOnOverlay(e) { if (e.target === e.currentTarget) closeCheckout(); }
 
-function closeCheckoutOnOverlay(e) {
-    if (e.target === e.currentTarget) closeCheckout();
+const val = id => (document.getElementById(id)?.value || '').trim();
+function setError(id, msg) {
+    const input = document.getElementById(id), err = document.getElementById('err-' + id);
+    input.classList.toggle('invalid', !!msg);
+    input.setAttribute('aria-invalid', msg ? 'true' : 'false');
+    err.textContent = msg || '';
+    err.classList.toggle('hidden', !msg);
+    return !msg;
 }
-
+function isPickup() { return document.querySelector('input[name="fulfil"]:checked').value === 'pickup'; }
+function validateStep(step) {
+    const checks = [];
+    if (step === 1) {
+        checks.push(setError('coName', val('coName') ? '' : 'Enter your name.'));
+        checks.push(setError('coEmail', /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val('coEmail')) ? '' : 'Enter an email like name@example.com.'));
+    }
+    if (step === 2 && !isPickup()) {
+        checks.push(setError('coStreet', val('coStreet') ? '' : 'Enter a street address for delivery.'));
+        checks.push(setError('coCity', val('coCity') ? '' : 'Enter a city.'));
+        checks.push(setError('coZip', /^\d{5}$/.test(val('coZip')) ? '' : 'Enter a 5-digit ZIP.'));
+    }
+    if (step === 3) {
+        checks.push(setError('coCard', val('coCard').replace(/\s/g, '').length >= 15 ? '' : 'Enter the full card number.'));
+        const [mm, yy] = val('coExp').split('/').map(Number);
+        const now = new Date(), expOk = mm >= 1 && mm <= 12 && yy >= 0 && new Date(2000 + yy, mm) > now;
+        checks.push(setError('coExp', expOk ? '' : 'Enter a valid expiry, MM/YY.'));
+        checks.push(setError('coCvv', /^\d{3,4}$/.test(val('coCvv')) ? '' : 'Enter the 3 or 4 digit code.'));
+    }
+    const ok = checks.every(Boolean);
+    if (!ok) { const bad = document.querySelector(`#checkoutStep${step} .invalid`); if (bad) bad.focus(); }
+    return ok;
+}
 function goToStep(step) {
+    if (step > checkoutStep && !validateStep(checkoutStep)) return;
     checkoutStep = step;
     renderCheckoutSteps();
+    const first = document.querySelector(`#checkoutStep${step} input, #checkoutStep${step} button`);
+    if (first) first.focus({ preventScroll: true });
 }
-
 function renderCheckoutSteps() {
-    // Hide all steps
-    for (let i = 1; i <= 4; i++) {
-        document.getElementById(`checkoutStep${i}`).classList.toggle('hidden', i !== checkoutStep);
-    }
-
-    // Update indicators
+    for (let i = 1; i <= 4; i++) document.getElementById(`checkoutStep${i}`).classList.toggle('hidden', i !== checkoutStep);
     for (let i = 1; i <= 3; i++) {
         const ind = document.getElementById(`stepInd${i}`);
         const circle = ind.querySelector('span:first-child');
         const label = ind.querySelector('span:last-child');
-        if (i < checkoutStep || checkoutStep === 4) {
-            circle.className = 'w-8 h-8 rounded-full bg-success text-white flex items-center justify-center text-sm font-bold';
-            circle.innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
-            if (label) label.className = 'text-sm font-medium text-success hidden sm:inline';
-        } else if (i === checkoutStep) {
-            circle.className = 'w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold';
-            circle.textContent = i;
-            if (label) label.className = 'text-sm font-medium text-primary hidden sm:inline';
-        } else {
-            circle.className = 'w-8 h-8 rounded-full bg-gray-200 text-txt-muted flex items-center justify-center text-sm font-bold';
-            circle.textContent = i;
-            if (label) label.className = 'text-sm font-medium text-txt-muted hidden sm:inline';
-        }
+        const done = i < checkoutStep || checkoutStep === 4, current = i === checkoutStep;
+        circle.className = `w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold ${done ? 'bg-accent-dark text-white' : current ? 'bg-primary-dark text-white' : 'bg-black/5 text-txt-muted'}`;
+        circle.innerHTML = done ? '<i class="fa-solid fa-check text-[10px]"></i>' : i;
+        label.className = `text-sm font-medium hidden sm:inline ${done || current ? 'text-primary-dark' : 'text-txt-muted'}`;
     }
-
-    // Populate order summary on step 3
     if (checkoutStep === 3) {
         const { subtotal, tax, total } = getCartTotals();
         document.getElementById('checkoutSummaryItems').innerHTML = cart.map(c => {
-            const p = products.find(pr => pr.id === c.id);
-            return `<div class="flex justify-between"><span>${p.emoji} ${p.name} × ${c.qty}</span><span>\$${(p.price * c.qty).toFixed(2)}</span></div>`;
+            const p = products.find(x => x.id === c.id);
+            return `<div class="flex justify-between gap-4"><span>${esc(lineName(p))} × ${c.qty}</span><span class="tabular-nums">${RRStore.money(p.price * c.qty)}</span></div>`;
         }).join('');
-        document.getElementById('checkoutSubtotal').textContent = `\$${subtotal.toFixed(2)}`;
-        document.getElementById('checkoutTax').textContent = `\$${tax.toFixed(2)}`;
-        document.getElementById('checkoutTotal').textContent = `\$${total.toFixed(2)}`;
+        document.getElementById('checkoutSubtotal').textContent = RRStore.money(subtotal);
+        document.getElementById('checkoutTax').textContent = RRStore.money(tax);
+        document.getElementById('checkoutTotal').textContent = RRStore.money(total);
     }
 }
-
-function togglePickup() {
-    const fields = document.getElementById('shippingFields');
-    const checked = document.getElementById('pickupCheck').checked;
-    fields.style.display = checked ? 'none' : 'block';
-}
+function togglePickup() { document.getElementById('shippingFields').classList.toggle('hidden', isPickup()); }
+function formatCard(el) { el.value = el.value.replace(/\D/g, '').slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 '); }
+function formatExpiry(el) { const d = el.value.replace(/\D/g, '').slice(0, 4); el.value = d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d; }
 
 function placeOrder() {
-    const val = id => (document.getElementById(id)?.value || '').trim();
-    const pickup = document.getElementById('pickupCheck').checked;
-    const street = val('coStreet'), city = val('coCity'), state = val('coState'), zip = val('coZip');
-    const address = [street, city, [state, zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+    if (!validateStep(3)) return;
+    const pickup = isPickup();
+    const address = [val('coStreet'), val('coCity'), [val('coState'), val('coZip')].filter(Boolean).join(' ')].filter(Boolean).join(', ');
     let order;
     try {
         order = RRStore.placeOrder({
-            customer: val('coName'),
-            email: val('coEmail'),
-            phone: val('coPhone'),
-            address: street ? address : '',
-            pickup,
-            items: cart.map(c => ({ id: c.id, qty: c.qty })),
-            payment: 'Stripe',
+            customer: val('coName'), email: val('coEmail'), phone: val('coPhone'),
+            address: pickup ? '' : address, pickup,
+            items: cart.map(c => ({ id: c.id, qty: c.qty })), payment: 'Stripe',
         });
     } catch (e) {
-        showToast('Sorry — those items just sold out.', 'warning');
+        showToast('Sorry, those items just sold out.', 'warning');
         return;
     }
     document.getElementById('orderNumber').textContent = '#' + order.id;
-    goToStep(4);
-    // Clear the cart (stock already decremented in the shared store)
+    document.getElementById('orderNextStep').textContent = pickup
+        ? "We'll call when it's loaded and ready to pick up."
+        : "We'll call to confirm your delivery fee and time.";
+    checkoutStep = 4;
+    renderCheckoutSteps();
     cart = [];
+    saveCart();
     products = RRStore.getProducts();
-    renderProducts();
-    renderCart();
-    updateCartBadge();
+    groups = buildGroups(products);
+    renderAll();
 }
 
-// ========== TOAST NOTIFICATIONS ==========
+// ========== NEWSLETTER ==========
+function subscribe() {
+    const email = val('newsletterEmail');
+    const msg = document.getElementById('newsletterMsg');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg.textContent = 'Enter a valid email address.'; return; }
+    msg.textContent = "You're on the list. Watch your inbox for project tips.";
+    document.getElementById('newsletterEmail').value = '';
+}
+
+// ========== TOASTS ==========
 function showToast(message, type = 'success') {
-    const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
-    const bgColor = type === 'warning' ? 'bg-warning' : 'bg-primary';
-    toast.className = `toast pointer-events-auto ${bgColor} text-white px-5 py-3 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium max-w-sm`;
-    toast.innerHTML = `<span>${message}</span>`;
-    container.appendChild(toast);
+    toast.className = `toast pointer-events-auto ${type === 'warning' ? 'bg-[#7A4A09]' : 'bg-primary-dark'} text-white px-5 py-3 rounded-2xl shadow-lg text-sm font-medium max-w-sm`;
+    toast.textContent = message;
+    document.getElementById('toastContainer').appendChild(toast);
     setTimeout(() => toast.remove(), 2300);
 }
 
@@ -1037,11 +1431,8 @@ document.querySelectorAll('a[href^="#"]').forEach(link => {
     link.addEventListener('click', e => {
         const id = link.getAttribute('href');
         if (id === '#') return;
-        e.preventDefault();
         const target = document.querySelector(id);
-        if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     });
 });
 </script>

@@ -1,6 +1,0 @@
-Drop the R&R Gardening logo here as:  logo.png
-
-It will automatically replace the 🌿 icon in the dashboard sidebar and the shop header.
-(Transparent PNG, roughly square or wide, at least 200px tall works best.
-To use a different file name or format, change RR_CONFIG.logoSrc in js/store.js.)
-
